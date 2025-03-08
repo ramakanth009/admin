@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -9,7 +9,8 @@ import {
   Typography,
   Paper,
   Divider,
-  CircularProgress,
+  Avatar,
+  Chip,
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import {
@@ -18,7 +19,6 @@ import {
   Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../AuthContext';
-import axios from 'axios';
 
 // Department admin colors
 const departmentColors = {
@@ -83,25 +83,50 @@ const useStyles = makeStyles({
   sidebarHeader: {
     padding: '20px 16px',
     borderBottom: '1px solid #e0e0e0',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
   },
-  adminTitle: {
-    fontSize: '16px',
+  brandContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandAvatar: {
+    width: 60,
+    height: 60,
+    backgroundColor: departmentColors.light,
+    marginBottom: '16px',
+  },
+  brandTitle: {
+    fontSize: '18px',
     fontWeight: 'bold',
     color: departmentColors.main,
+    textAlign: 'center',
   },
-  adminSubtitle: {
+  brandSubtitle: {
     fontSize: '14px',
     color: '#666666',
+    textAlign: 'center',
+    marginTop: '4px',
   },
-  departmentBadge: {
+  departmentChip: {
     backgroundColor: `${departmentColors.light}33`,
     color: departmentColors.dark,
-    padding: '4px 8px',
-    borderRadius: '4px',
+    borderRadius: '16px',
+    padding: '3px 10px',
     fontSize: '12px',
     fontWeight: 'bold',
-    marginTop: '6px',
-    display: 'inline-block',
+    marginTop: '10px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+  },
+  welcomeText: {
+    fontSize: '13px',
+    color: '#888888',
+    marginTop: '12px',
+    textAlign: 'center',
   }
 });
 
@@ -121,60 +146,9 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, userDetails } = useAuth();
-  const [departmentData, setDepartmentData] = useState({
-    name: '',
-    institution: '',
-    studentCount: 0
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Fetch department data from API
-    const fetchDepartmentData = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('accessToken');
-        
-        // In a real implementation, uncomment this to make the actual API call
-        // const response = await axios.get('http://localhost:8000/api/department-admin/dashboard/', {
-        //   headers: {
-        //     Authorization: `Bearer ${token}`,
-        //   },
-        // });
-        
-        // For now using simulated data, but in production use response data
-        // If we have user details from context, use them
-        if (userDetails) {
-          setDepartmentData({
-            name: userDetails.department || 'Computer Science',
-            institution: userDetails.institution_details?.name || 'KLU University',
-            studentCount: userDetails.institution_details?.total_students || 25
-          });
-        } else {
-          // Simulated API response
-          setTimeout(() => {
-            setDepartmentData({
-              name: 'Computer Science',
-              institution: 'KLU University',
-              studentCount: 25
-            });
-            setLoading(false);
-          }, 800);
-        }
-      } catch (error) {
-        console.error('Error fetching department data:', error);
-        setLoading(false);
-        // Set fallback values if API fails
-        setDepartmentData({
-          name: 'Unknown Department',
-          institution: 'Unknown Institution',
-          studentCount: 0
-        });
-      }
-    };
-
-    fetchDepartmentData();
-  }, [userDetails]);
+  
+  // Get department name from context or default
+  const departmentName = userDetails?.department || "Computer Science";
 
   const handleTabClick = (path) => {
     navigate(path);
@@ -191,23 +165,24 @@ const Sidebar = () => {
   return (
     <Paper className={classes.sidebar} elevation={0}>
       <Box className={classes.sidebarHeader}>
-        {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="40px">
-            <CircularProgress size={24} sx={{ color: departmentColors.main }} />
-          </Box>
-        ) : (
-          <>
-            <Typography className={classes.adminTitle}>
-              {departmentData.institution}
-            </Typography>
-            <Typography className={classes.adminSubtitle}>
-              Department Portal
-            </Typography>
-            <Box className={classes.departmentBadge}>
-              {departmentData.name}
-            </Box>
-          </>
-        )}
+        <Avatar className={classes.brandAvatar}>
+          <SchoolIcon fontSize="large" />
+        </Avatar>
+        <Typography className={classes.brandTitle}>
+          Department Portal
+        </Typography>
+        <Typography className={classes.brandSubtitle}>
+          Learning Management System
+        </Typography>
+        
+        <Chip
+          icon={<SchoolIcon style={{ fontSize: '14px' }} />}
+          label={departmentName}
+          className={classes.departmentChip}
+          size="small"
+        />
+        
+       
       </Box>
       
       <Box className={classes.sidebarContent}>

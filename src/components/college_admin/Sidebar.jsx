@@ -9,16 +9,15 @@ import {
   Typography,
   Paper,
   Divider,
-  CircularProgress,
+  Avatar,
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import {
   DashboardOutlined as DashboardIcon,
-  School,
+  School as SchoolIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
-import AuthContext, { useAuth } from '../AuthContext';
-import axios from 'axios';
+import { useAuth } from '../AuthContext';
 
 // Admin dashboard primary colors
 const primaryColors = {
@@ -83,16 +82,39 @@ const useStyles = makeStyles({
   sidebarHeader: {
     padding: '20px 16px',
     borderBottom: '1px solid #e0e0e0',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
   },
-  adminTitle: {
-    fontSize: '16px',
+  brandContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandAvatar: {
+    width: 60,
+    height: 60,
+    backgroundColor: primaryColors.light,
+    marginBottom: '16px',
+  },
+  brandTitle: {
+    fontSize: '18px',
     fontWeight: 'bold',
     color: primaryColors.main,
+    textAlign: 'center',
   },
-  adminSubtitle: {
+  brandSubtitle: {
     fontSize: '14px',
     color: '#666666',
+    textAlign: 'center',
+    marginTop: '4px',
   },
+  welcomeText: {
+    fontSize: '13px',
+    color: '#888888',
+    marginTop: '12px',
+    textAlign: 'center',
+  }
 });
 
 // Simplified menu - only Dashboard and Student Management
@@ -101,7 +123,7 @@ const menuSections = [
     heading: 'College Admin',
     items: [
       { id: 'dashboard', label: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-      { id: 'User Management', label: 'User Management', icon: <School />, path: '/student-management' }
+      { id: 'User Management', label: 'User Management', icon: <SchoolIcon />, path: '/student-management' }
     ]
   }
 ];
@@ -111,53 +133,6 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { setIsAuthenticated } = useAuth();
-  const [institutionData, setInstitutionData] = useState({
-    name: '',
-    code: '',
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Fetch institution data from API
-    const fetchInstitutionData = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('accessToken');
-        
-        // In a real implementation, uncomment this to make the actual API call
-        const response = await axios.get('http://localhost:8000/api/college-admin/dashboard/', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        // For now using simulated data, but in production use response data
-        setInstitutionData({
-          name: response.data.institution_name,
-          code: response.data.stats.institution_details.code,
-        });
-
-        // Simulated API response
-        setTimeout(() => {
-          setInstitutionData({
-            name: 'KLU University',
-            code: 'KLU20241',
-          });
-          setLoading(false);
-        }, 800);
-      } catch (error) {
-        console.error('Error fetching institution data:', error);
-        setLoading(false);
-        // Set fallback values if API fails
-        setInstitutionData({
-          name: 'Unknown Institution',
-          code: 'N/A',
-        });
-      }
-    };
-
-    fetchInstitutionData();
-  }, []);
 
   const handleTabClick = (path) => {
     navigate(path);
@@ -180,20 +155,18 @@ const Sidebar = () => {
   return (
     <Paper className={classes.sidebar} elevation={0}>
       <Box className={classes.sidebarHeader}>
-        {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="40px">
-            <CircularProgress size={24} sx={{ color: primaryColors.main }} />
-          </Box>
-        ) : (
-          <>
-            <Typography className={classes.adminTitle}>
-              {institutionData.name}
-            </Typography>
-            <Typography className={classes.adminSubtitle}>
-              Code: {institutionData.code}
-            </Typography>
-          </>
-        )}
+        <Avatar className={classes.brandAvatar}>
+          <SchoolIcon fontSize="large" />
+        </Avatar>
+        <Typography className={classes.brandTitle}>
+          Admin Portal
+        </Typography>
+        <Typography className={classes.brandSubtitle}>
+          Learning Management System
+        </Typography>
+        {/* <Typography className={classes.welcomeText}> */}
+          {/* Welcome to your dashboard */}
+        {/* </Typography> */}
       </Box>
       
       <Box className={classes.sidebarContent}>

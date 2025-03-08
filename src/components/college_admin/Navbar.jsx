@@ -12,15 +12,17 @@ import {
   Paper,
   Menu,
   MenuItem,
+  Tooltip,
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import {
   Search,
   KeyboardArrowDown,
+  Logout as LogoutIcon,
 } from '@mui/icons-material';
-// import AuthContext from '../AuthContext';
 import { useAuth } from '../AuthContext';
 import Notifications from './Notifications';
+import axios from 'axios';
 
 // Admin dashboard primary colors
 const primaryColors = {
@@ -96,9 +98,19 @@ const useStyles = makeStyles({
   userName: {
     color: '#ffffff !important',
     marginRight: '4px !important',
+    fontWeight: '500 !important',
   },
   dropdownIcon: {
     color: '#ffffff !important',
+  },
+  menuItem: {
+    display: 'flex !important',
+    alignItems: 'center !important',
+    gap: '8px !important',
+  },
+  logoutIcon: {
+    color: '#f44336 !important',
+    fontSize: '1.2rem !important',
   },
 });
 
@@ -107,26 +119,36 @@ const NavBar = () => {
   const navigate = useNavigate();
   const { setIsAuthenticated } = useAuth();
   const [anchorEl, setAnchorEl] = useState(null);
-  const [adminName, setAdminName] = useState("College Admin");
+  const [userName, setUserName] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, you'd fetch this information from your backend API
-    // using the stored access token
-    const fetchAdminProfile = async () => {
+    // Fetch user data from API
+    const fetchUserData = async () => {
       try {
-        // This is simulated - replace with actual API call
-        // const token = localStorage.getItem('accessToken');
-        // const response = await axios.get('api/admin/profile', {
+        setLoading(true);
+        const token = localStorage.getItem('accessToken');
+        
+        // In a real implementation, make the API call:
+        // const response = await axios.get('http://localhost:8000/api/users/profile', {
         //   headers: { Authorization: `Bearer ${token}` }
         // });
-        // setAdminName(response.data.name);
-        // setInstitutionName(response.data.institution.name);
+        // setUserName(response.data.username || "Admin User");
+        
+        // For demo purposes, simulate fetching the user's name
+        setTimeout(() => {
+          const userRole = localStorage.getItem('userRole');
+          setUserName(userRole === 'college_admin' ? 'Admin User' : 'Department Admin');
+          setLoading(false);
+        }, 600);
       } catch (error) {
-        console.error('Error fetching admin profile:', error);
+        console.error('Error fetching user data:', error);
+        setUserName("Admin User");
+        setLoading(false);
       }
     };
 
-    fetchAdminProfile();
+    fetchUserData();
   }, []);
 
   const handleProfileClick = (event) => {
@@ -143,6 +165,7 @@ const NavBar = () => {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userRole');
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userDetails');
     
     // Update authentication context
     setIsAuthenticated(false);
@@ -179,14 +202,20 @@ const NavBar = () => {
         <Box display="flex" alignItems="center">
           <Notifications />
           
-          <Box 
-            className={classes.profileSection}
-            onClick={handleProfileClick}
-          >
-            <Avatar className={classes.avatar}>A</Avatar>
-            <Typography className={classes.userName}>{adminName}</Typography>
-            <KeyboardArrowDown className={classes.dropdownIcon} />
-          </Box>
+          <Tooltip title="Account menu">
+            <Box 
+              className={classes.profileSection}
+              onClick={handleProfileClick}
+            >
+              <Avatar className={classes.avatar}>
+                {!loading && userName ? userName.charAt(0).toUpperCase() : 'A'}
+              </Avatar>
+              <Typography className={classes.userName}>
+                {!loading ? userName : 'Loading...'}
+              </Typography>
+              <KeyboardArrowDown className={classes.dropdownIcon} />
+            </Box>
+          </Tooltip>
 
           <Menu
             anchorEl={anchorEl}
@@ -195,19 +224,22 @@ const NavBar = () => {
             PaperProps={{
               elevation: 3,
               sx: {
-                mt: 1.5,
                 minWidth: 180,
                 '& .MuiMenuItem-root': {
                   px: 2,
                   py: 1,
                 },
+                borderRadius: '8px',
+                mt: 1.5,
               },
             }}
           >
-            <MenuItem onClick={handleClose}>My Profile</MenuItem>
-            <MenuItem onClick={handleClose}>Settings</MenuItem>
-            <MenuItem onClick={handleLogout} sx={{ color: '#f44336' }}>
-              Logout
+            <MenuItem 
+              onClick={handleLogout} 
+              className={classes.menuItem}
+            >
+              <LogoutIcon className={classes.logoutIcon} />
+              <Typography color="#f44336">Logout</Typography>
             </MenuItem>
           </Menu>
         </Box>
