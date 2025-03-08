@@ -101,7 +101,7 @@ const menuSections = [
     heading: 'College Admin',
     items: [
       { id: 'dashboard', label: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-      { id: 'student-management', label: 'Student Management', icon: <School />, path: '/student-management' }
+      { id: 'User Management', label: 'User Management', icon: <School />, path: '/student-management' }
     ]
   }
 ];

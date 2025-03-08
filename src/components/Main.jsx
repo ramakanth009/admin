@@ -5,7 +5,7 @@ import { makeStyles } from '@mui/styles';
 import Sidebar from './Sidebar';
 import NavBar from './Navbar';
 import Dashboard from './dashboard/Dashboard';
-import StudentManagement from './institution_managment/StudentManagement';
+import UserManagement from './user_management/UserManagement';
 import { useAuth } from './AuthContext'; // Updated import
 
 const useStyles = makeStyles({
@@ -51,7 +51,7 @@ const Main = () => {
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/student-management" element={<StudentManagement />} />
+            <Route path="/student-management" element={<UserManagement />} />
             {/* Catch-all route */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
