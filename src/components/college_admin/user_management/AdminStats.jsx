@@ -4,7 +4,7 @@ import {
   SupervisorAccount as AdminIcon,
   School as SchoolIcon,
 } from '@mui/icons-material';
-import Card2 from '../common/Card2';
+import Card2 from '../../common/Card2';
 
 // Admin dashboard primary colors
 const primaryColors = {

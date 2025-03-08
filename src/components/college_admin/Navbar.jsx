@@ -18,7 +18,8 @@ import {
   Search,
   KeyboardArrowDown,
 } from '@mui/icons-material';
-import { useAuth } from './AuthContext';
+// import AuthContext from '../AuthContext';
+import { useAuth } from '../AuthContext';
 import Notifications from './Notifications';
 
 // Admin dashboard primary colors

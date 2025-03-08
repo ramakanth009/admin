@@ -16,6 +16,8 @@ import {
   Link,
   Grid,
   Alert,
+  Tabs,
+  Tab,
   CircularProgress
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
@@ -39,12 +41,19 @@ const primaryColors = {
   dark: "#0D47A1",
 };
 
+const departmentColors = {
+  light: "#81C784",
+  main: "#4CAF50",
+  dark: "#2E7D32",
+};
+
 const useStyles = makeStyles({
   root: {
     minHeight: "100vh",
     display: "flex",
     alignItems: "center",
-    background: `linear-gradient(135deg, ${primaryColors.main} 0%, ${primaryColors.dark} 100%)`,
+    background: (props) => 
+      `linear-gradient(135deg, ${props.colors.main} 0%, ${props.colors.dark} 100%)`,
     padding: "20px",
   },
   paper: {
@@ -63,7 +72,8 @@ const useStyles = makeStyles({
   },
   rightSection: {
     flex: 1,
-    background: `linear-gradient(135deg, rgba(25, 118, 210, 0.9) 0%, rgba(13, 71, 161, 0.9) 100%)`,
+    background: (props) => 
+      `linear-gradient(135deg, rgba(${props.isCollegeAdmin ? '25, 118, 210, 0.9' : '76, 175, 80, 0.9'}) 0%, rgba(${props.isCollegeAdmin ? '13, 71, 161, 0.9' : '46, 125, 50, 0.9'}) 100%)`,
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
@@ -87,22 +97,22 @@ const useStyles = makeStyles({
         borderColor: "#e0e0e0",
       },
       "&:hover fieldset": {
-        borderColor: primaryColors.light,
+        borderColor: (props) => props.colors.light,
       },
       "&.Mui-focused fieldset": {
-        borderColor: primaryColors.main,
+        borderColor: (props) => props.colors.main,
       },
     },
   },
   submitButton: {
     marginTop: "20px",
-    background: `${primaryColors.main} !important`,
+    background: (props) => `${props.colors.main} !important`,
     color: "white",
     padding: "12px",
     position: "relative",
     overflow: "hidden",
     "&:hover": {
-      background: `${primaryColors.dark} !important`,
+      background: (props) => `${props.colors.dark} !important`,
     },
   },
   welcomeText: {
@@ -132,7 +142,7 @@ const useStyles = makeStyles({
     },
   },
   forgotPassword: {
-    color: primaryColors.main,
+    color: (props) => props.colors.main,
     textDecoration: "none",
     "&:hover": {
       textDecoration: "underline",
@@ -142,7 +152,7 @@ const useStyles = makeStyles({
   brandName: {
     fontSize: "24px",
     fontWeight: "bold",
-    color: primaryColors.main,
+    color: (props) => props.colors.main,
     marginBottom: "40px",
   },
   contactInfo: {
@@ -168,45 +178,33 @@ const useStyles = makeStyles({
       transform: "translateX(100%) translateY(100%)",
     },
   },
-  // New styles for enhanced loading button
-  loadingProgress: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: primaryColors.light,
-    opacity: 0.3,
-    transition: "width 0.3s ease-in-out",
-    zIndex: 0,
+  adminTabs: {
+    marginBottom: "20px !important",
+    "& .MuiTabs-indicator": {
+      backgroundColor: (props) => `${props.colors.main} !important`,
+    },
+    "& .MuiTab-root": {
+      "&.Mui-selected": {
+        color: (props) => `${props.colors.main} !important`,
+      },
+    },
   },
-  buttonContent: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1,
-    position: "relative",
-  },
-  loadingSpinner: {
-    marginRight: "10px",
-    color: "white",
-    fontWeight:"bold !important",
-  },
-  loadingText: {
-    opacity: 1,
-    transition: "opacity 0.3s ease-in-out",
-  }
 });
 
+// Both college admin and department admin use the same login endpoint
+const LOGIN_ENDPOINT = "http://localhost:8000/api/auth/admin/login/";
+
 const LoginPage = () => {
-  const classes = useStyles();
+  const [loginType, setLoginType] = useState("college_admin");
+  const colors = loginType === "college_admin" ? primaryColors : departmentColors;
+  const classes = useStyles({ colors, isCollegeAdmin: loginType === "college_admin" });
+  
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
-  const [loadingProgress, setLoadingProgress] = useState(0); // Track loading progress for animation
-  const [showLoadingText, setShowLoadingText] = useState(false); // Show loading text with delay
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -232,59 +230,17 @@ const LoginPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Handle loading animation
-  useEffect(() => {
-    let interval;
-    
-    if (loading) {
-      // Start progress animation
-      interval = setInterval(() => {
-        setLoadingProgress((prev) => {
-          // Slow down as we approach 90%
-          const nextValue = prev < 70 ? prev + 3 : prev + 0.5;
-          return Math.min(nextValue, 90);
-        });
-      }, 100);
-      
-      // Show loading text after a small delay
-      const textTimer = setTimeout(() => {
-        setShowLoadingText(true);
-      }, 600);
-      
-      return () => {
-        clearInterval(interval);
-        clearTimeout(textTimer);
-      };
-    } else {
-      // Reset loading state when done
-      if (loadingProgress > 0) {
-        // Quick completion animation when loading is done
-        interval = setInterval(() => {
-          setLoadingProgress((prev) => {
-            return prev < 100 ? prev + 5 : 100;
-          });
-        }, 30);
-        
-        // Reset after completion
-        const resetTimer = setTimeout(() => {
-          setLoadingProgress(0);
-          setShowLoadingText(false);
-        }, 1000);
-        
-        return () => {
-          clearInterval(interval);
-          clearTimeout(resetTimer);
-        };
-      }
-    }
-  }, [loading, loadingProgress]);
-
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/dashboard", { replace: true });
     }
   }, [isAuthenticated, navigate]);
+
+  const handleLoginTypeChange = (event, newValue) => {
+    setLoginType(newValue);
+    setError("");
+  };
 
   const handleChange = (event) => {
     const { name, value, checked } = event.target;
@@ -300,47 +256,98 @@ const LoginPage = () => {
     setLoading(true);
     setError("");
 
-    // Add an intentional delay to show the loading animation
-    // This can be removed in production if the actual API call is slow enough
-    // to naturally show the loading animation
-    setTimeout(async () => {
-      try {
-        // College admin login endpoint
-        const response = await axios.post("http://localhost:8000/api/auth/admin/login/", {
-          email: formData.email,
-          password: formData.password,
-        });
+    try {
+      // Use the shared login endpoint for both admin types
+      
+      const response = await axios.post(LOGIN_ENDPOINT, {
+        email: formData.email,
+        password: formData.password,
+      });
 
-        if (response.data.access) {
-          // Use the login function from AuthContext
-          login(response.data.access, response.data.refresh, "college_admin");
-          
-          if (formData.rememberMe) {
-            localStorage.setItem("rememberedEmail", formData.email);
-          } else {
-            localStorage.removeItem("rememberedEmail");
-          }
-
-          // Wait for the loading animation to complete
-          setTimeout(() => {
-            // Redirect to dashboard
-            navigate("/dashboard");
-          }, 500);
-        }
-      } catch (error) {
-        console.error("Login error:", error);
-        if (error.response?.status === 401) {
-          setError("Invalid credentials. Please check your email and password.");
+      if (response.data.access) {
+        // Use the login function from AuthContext
+        login(response.data.access, response.data.refresh, loginType);
+        
+        if (formData.rememberMe) {
+          localStorage.setItem("rememberedEmail", formData.email);
         } else {
-          setError(
-            error.response?.data?.detail ||
-            error.response?.data?.error ||
-            "An error occurred during login. Please try again."
-          );
+          localStorage.removeItem("rememberedEmail");
         }
-        setLoading(false);
+
+        // Wait for the loading animation to complete
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 500);
       }
-    }, 1500); // Simulate a network delay
+    } catch (error) {
+      console.error("Login error:", error);
+      if (error.response?.status === 401) {
+        setError("Invalid credentials. Please check your email and password.");
+      } else {
+        setError(
+          error.response?.data?.detail ||
+          error.response?.data?.error ||
+          "An error occurred during login. Please try again."
+        );
+      }
+      setLoading(false);
+    }
+  };
+
+  const getFeaturesList = () => {
+    if (loginType === "college_admin") {
+      return (
+        <>
+          <Typography className={classes.welcomeText}>
+            College Administration Panel
+          </Typography>
+          <ul className={classes.featureList}>
+            <li>
+              <AdminIcon />
+              Manage your institution's dashboard and analytics
+            </li>
+            <li>
+              <SchoolIcon />
+              Create and update department admin accounts
+            </li>
+            <li>
+              <GroupsIcon />
+              Access institution-wide student information
+            </li>
+            <li>
+              <SchoolIcon />
+              Manage curriculum and assessment content
+            </li>
+          </ul>
+        </>
+      );
+    } else {
+      return (
+        <>
+          <Typography className={classes.welcomeText}>
+            Department Administration Panel
+          </Typography>
+          <ul className={classes.featureList}>
+            <li>
+              <AdminIcon />
+              Manage your department's dashboard and analytics
+            </li>
+            <li>
+              <SchoolIcon />
+              Monitor student performance and progress
+            </li>
+            <li>
+              <GroupsIcon />
+              Access department-specific student information
+            </li>
+            <li>
+              <SchoolIcon />
+              Track assessment outcomes and curriculum
+            </li>
+          </ul>
+        </>
+      );
+    }
   };
 
   if (pageLoading) {
@@ -353,11 +360,34 @@ const LoginPage = () => {
         <Paper className={classes.paper}>
           <Box className={classes.leftSection}>
             <Typography className={classes.brandName}>Gigaversity LMS</Typography>
+            
+            <Tabs
+              value={loginType}
+              onChange={handleLoginTypeChange}
+              className={classes.adminTabs}
+              variant="fullWidth"
+            >
+              <Tab 
+                label="College Admin" 
+                value="college_admin"
+                icon={<AdminIcon />}
+                iconPosition="start"
+              />
+              <Tab 
+                label="Department Admin" 
+                value="department_admin"
+                icon={<SchoolIcon />}
+                iconPosition="start"
+              />
+            </Tabs>
+            
             <Typography variant="h5" gutterBottom>
-              College Admin Login
+              {loginType === "college_admin" ? "College Admin Login" : "Department Admin Login"}
             </Typography>
             <Typography variant="body1" color="textSecondary" gutterBottom>
-              Sign in to manage your institution
+              {loginType === "college_admin" 
+                ? "Sign in to manage your institution" 
+                : "Sign in to manage your department"}
             </Typography>
 
             <form className={classes.form} onSubmit={handleSubmit}>
@@ -379,7 +409,7 @@ const LoginPage = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <EmailIcon sx={{ color: primaryColors.main }} />
+                      <EmailIcon sx={{ color: colors.main }} />
                     </InputAdornment>
                   ),
                 }}
@@ -398,7 +428,7 @@ const LoginPage = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <LockIcon sx={{ color: primaryColors.main }} />
+                      <LockIcon sx={{ color: colors.main }} />
                     </InputAdornment>
                   ),
                   endAdornment: (
@@ -428,7 +458,7 @@ const LoginPage = () => {
                       disabled={loading}
                       sx={{
                         "&.Mui-checked": {
-                          color: primaryColors.main,
+                          color: colors.main,
                         },
                       }}
                     />
@@ -446,7 +476,6 @@ const LoginPage = () => {
                 </Link>
               </Grid>
 
-              {/* Enhanced loading button */}
               <LoadingButton
                 className={classes.submitButton}
                 fullWidth
@@ -459,27 +488,7 @@ const LoginPage = () => {
 
           <Box className={classes.rightSection}>
             <div className={classes.shine} />
-            <Typography className={classes.welcomeText}>
-              College Administration Panel
-            </Typography>
-            <ul className={classes.featureList}>
-              <li>
-                <AdminIcon />
-                Manage your institution's dashboard and analytics
-              </li>
-              <li>
-                <SchoolIcon />
-                Create and update department admin accounts
-              </li>
-              <li>
-                <GroupsIcon />
-                Access institution-wide student information
-              </li>
-              <li>
-                <SchoolIcon />
-                Manage curriculum and assessment content
-              </li>
-            </ul>
+            {getFeaturesList()}
             <Typography className={classes.contactInfo}>
               For support: support@learningsystem.com | +1 (555) 123-4567
             </Typography>

@@ -20,7 +20,7 @@ import {
   Refresh as RefreshIcon 
 } from '@mui/icons-material';
 import axios from 'axios';
-import LoadingSpinner from './common/LoadingSpinner';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 // Admin dashboard primary colors
 const primaryColors = {

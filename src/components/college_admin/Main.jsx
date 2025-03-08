@@ -6,7 +6,8 @@ import Sidebar from './Sidebar';
 import NavBar from './Navbar';
 import Dashboard from './dashboard/Dashboard';
 import UserManagement from './user_management/UserManagement';
-import { useAuth } from './AuthContext'; // Updated import
+import { useAuth } from '../AuthContext'; // Updated import
+// import AuthContext from '../AuthContext';
 
 const useStyles = makeStyles({
   root: {

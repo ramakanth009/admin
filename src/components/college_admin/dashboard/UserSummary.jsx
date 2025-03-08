@@ -6,7 +6,7 @@ import {
   SupervisorAccount as AdminIcon
 } from '@mui/icons-material';
 import { makeStyles } from '@mui/styles';
-import Card1 from '../common/Card1';
+import Card1 from '../../common/Card1';
 
 // Admin dashboard primary colors
 const primaryColors = {
