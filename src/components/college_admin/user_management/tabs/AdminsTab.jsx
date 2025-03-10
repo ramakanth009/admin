@@ -25,7 +25,6 @@ import axios from 'axios';
 
 // Import custom components
 import AdminStats from '../AdminStats';
-import FilterSection from '../FilterSection';
 import StatusChip from '../StatusChip';
 
 // Admin dashboard primary colors
@@ -94,11 +93,6 @@ const AdminsTab = () => {
   const [admins, setAdmins] = useState([]);
   const [adminPage, setAdminPage] = useState(1);
   const [adminTotalPages, setAdminTotalPages] = useState(1);
-  const [adminFilters, setAdminFilters] = useState({
-    department: '',
-    isActive: '',
-    role: '',
-  });
   
   // Common state
   const [loading, setLoading] = useState(true);
@@ -110,10 +104,10 @@ const AdminsTab = () => {
     severity: 'info',
   });
 
-  // Fetch data on initial load and when filters or page changes
+  // Fetch data on initial load and when page changes
   useEffect(() => {
     fetchAdmins();
-  }, [adminPage, adminFilters]);
+  }, [adminPage]);
 
   const fetchAdmins = async () => {
     try {
@@ -122,9 +116,6 @@ const AdminsTab = () => {
 
       // Build query parameters
       let queryParams = `page=${adminPage}&page_size=10`;
-      if (adminFilters.department) queryParams += `&department=${adminFilters.department}`;
-      if (adminFilters.isActive !== '') queryParams += `&is_active=${adminFilters.isActive === 'active'}`;
-      if (adminFilters.role) queryParams += `&role=${adminFilters.role}`;
 
       const token = localStorage.getItem('accessToken');
       const response = await axios.get(
@@ -160,43 +151,11 @@ const AdminsTab = () => {
     setAdminPage(value);
   };
 
-  const handleAdminFilterChange = (event) => {
-    const { name, value } = event.target;
-    setAdminFilters({
-      ...adminFilters,
-      [name]: value,
-    });
-    setAdminPage(1);
-  };
-
-  const resetAdminFilters = () => {
-    setAdminFilters({
-      department: '',
-      isActive: '',
-      role: '',
-    });
-    setAdminPage(1);
-  };
-
   const handleCloseSnackbar = () => {
     setSnackbar({
       ...snackbar,
       open: false,
     });
-  };
-
-  // Extract unique departments for filter options
-  const getAvailableDepartments = () => {
-    const departments = new Set();
-    
-    // Add departments from admins
-    admins.forEach(admin => {
-      if (admin.department) {
-        departments.add(admin.department);
-      }
-    });
-    
-    return Array.from(departments);
   };
 
   return (
@@ -207,15 +166,6 @@ const AdminsTab = () => {
       
       {/* Admin Statistics Cards */}
       <AdminStats admins={admins} loading={loading} />
-
-      {/* Admin Filters section - Always visible */}
-      <FilterSection
-        filters={adminFilters}
-        handleFilterChange={handleAdminFilterChange}
-        resetFilters={resetAdminFilters}
-        availableDepartments={getAvailableDepartments()}
-        type="admin"
-      />
       
       {/* Refresh button */}
       <Box className={classes.searchBox}>
@@ -273,7 +223,7 @@ const AdminsTab = () => {
                     <AdminIcon className={classes.emptyIcon} />
                     <Typography variant="h6">No admins found</Typography>
                     <Typography variant="body2" color="textSecondary">
-                      Try adjusting your search or filters
+                      Try refreshing the page
                     </Typography>
                   </Box>
                 </TableCell>

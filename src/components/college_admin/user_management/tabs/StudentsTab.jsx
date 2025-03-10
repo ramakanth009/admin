@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -14,7 +14,8 @@ import {
   CircularProgress,
   Alert,
   Tooltip,
-  Snackbar
+  Snackbar,
+  Button
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import {
@@ -39,14 +40,24 @@ const primaryColors = {
 };
 
 const useStyles = makeStyles({
-  searchBox: {
-    marginBottom: '20px',
+  titleContainer: {
     display: 'flex',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    marginBottom: '16px',
+  },
+  sectionTitle: {
+    fontWeight: 'bold !important',
+    color: primaryColors.dark,
+  },
+  refreshButton: {
+    color: `${primaryColors.main} !important`,
+    '&:hover': {
+      backgroundColor: `${primaryColors.light}30 !important`,
+    },
   },
   tableContainer: {
-    marginTop: '16px',
+    marginTop: '24px',
     borderRadius: '10px !important',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05) !important',
   },
@@ -56,14 +67,17 @@ const useStyles = makeStyles({
       cursor: 'pointer',
     },
   },
-  actionButton: {
-    marginLeft: '8px !important',
-    color: primaryColors.main,
-  },
   paginationContainer: {
     display: 'flex',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: '16px',
+  },
+  refreshInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    color: '#666',
+    fontSize: '0.875rem',
   },
   emptyMessage: {
     display: 'flex',
@@ -78,17 +92,15 @@ const useStyles = makeStyles({
     marginBottom: '16px',
     color: '#ccc',
   },
-  sectionTitle: {
-    marginBottom: '16px !important',
-    fontWeight: 'bold !important',
-    color: primaryColors.dark,
-  },
   idCell: {
     fontFamily: 'monospace',
     fontWeight: '500',
     color: '#555',
   }
 });
+
+// Auto refresh interval in milliseconds
+const AUTO_REFRESH_INTERVAL = 60000; // 1 minute
 
 const StudentsTab = () => {
   const classes = useStyles();
@@ -111,20 +123,20 @@ const StudentsTab = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState(new Date());
+  const [autoRefresh, setAutoRefresh] = useState(true);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'info',
   });
 
-  // Fetch data on initial load and when filters or page changes
-  useEffect(() => {
-    fetchStudents();
-  }, [studentPage, studentFilters]);
-
-  const fetchStudents = async () => {
+  // Memoize fetchStudents to avoid unnecessary re-renders
+  const fetchStudents = useCallback(async (silentRefresh = false) => {
     try {
-      setLoading(true);
+      if (!silentRefresh) {
+        setLoading(true);
+      }
       setError(null);
 
       // Build query parameters
@@ -155,6 +167,7 @@ const StudentsTab = () => {
 
         setStudents(response.data.results || []);
         setStudentTotalPages(response.data.total_pages || 1);
+        setLastRefreshed(new Date());
       } catch (apiError) {
         console.error('API call failed:', apiError);
         
@@ -171,16 +184,42 @@ const StudentsTab = () => {
           setError(`Error: ${apiError.message}`);
         }
       } finally {
-        setLoading(false);
+        if (!silentRefresh) {
+          setLoading(false);
+        }
         setRefreshing(false);
       }
     } catch (error) {
       console.error('Error fetching students:', error);
-      setError('Failed to load students. Please try again.');
-      setLoading(false);
+      if (!silentRefresh) {
+        setError('Failed to load students. Please try again.');
+        setLoading(false);
+      }
       setRefreshing(false);
     }
-  };
+  }, [studentPage, studentFilters]);
+
+  // Fetch data on initial load and when filters or page changes
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+
+  // Set up auto refresh
+  useEffect(() => {
+    let interval;
+    
+    if (autoRefresh) {
+      interval = setInterval(() => {
+        fetchStudents(true); // Silent refresh
+      }, AUTO_REFRESH_INTERVAL);
+    }
+    
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [autoRefresh, fetchStudents]);
 
   const fetchStudentDetails = async (studentId) => {
     try {
@@ -277,6 +316,11 @@ const StudentsTab = () => {
     });
   };
 
+  // Format the last refreshed time
+  const formatLastRefreshed = () => {
+    return lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   // Extract unique departments for filter options
   const getAvailableDepartments = () => {
     const departments = new Set();
@@ -293,9 +337,29 @@ const StudentsTab = () => {
 
   return (
     <>
-      <Typography variant="h5" className={classes.sectionTitle}>
-        Student Management
-      </Typography>
+      {/* Header with Title and Refresh Button */}
+      <Box className={classes.titleContainer}>
+        <Typography variant="h5" className={classes.sectionTitle}>
+          Student Management
+        </Typography>
+        
+        <Button
+          variant="text"
+          startIcon={<RefreshIcon className={refreshing ? 'rotating' : ''} />}
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className={classes.refreshButton}
+          sx={{
+            animation: refreshing ? 'spin 1s linear infinite' : 'none',
+            '@keyframes spin': {
+              '0%': { transform: 'rotate(0deg)' },
+              '100%': { transform: 'rotate(360deg)' },
+            },
+          }}
+        >
+          Refresh Data
+        </Button>
+      </Box>
     
       {/* Student Statistics Cards */}
       <StudentStats students={students} loading={loading} />
@@ -307,30 +371,9 @@ const StudentsTab = () => {
         resetFilters={resetStudentFilters}
         availableDepartments={getAvailableDepartments()}
         type="student"
+        colors={primaryColors}
       />
       
-      {/* Refresh button */}
-      <Box className={classes.searchBox}>
-        <Tooltip title="Refresh">
-          <IconButton
-            className={classes.actionButton}
-            onClick={handleRefresh}
-            disabled={refreshing}
-          >
-            <RefreshIcon
-              className={refreshing ? 'rotating' : ''}
-              sx={{
-                animation: refreshing ? 'spin 1s linear infinite' : 'none',
-                '@keyframes spin': {
-                  '0%': { transform: 'rotate(0deg)' },
-                  '100%': { transform: 'rotate(360deg)' },
-                },
-              }}
-            />
-          </IconButton>
-        </Tooltip>
-      </Box>
-
       {/* Students table */}
       <TableContainer component={Paper} className={classes.tableContainer}>
         <Table>
@@ -416,9 +459,15 @@ const StudentsTab = () => {
           </TableBody>
         </Table>
 
-        {/* Student Pagination */}
+        {/* Bottom Bar with Pagination and Last Refreshed info */}
         {!loading && students.length > 0 && (
           <Box className={classes.paginationContainer}>
+            <Box className={classes.refreshInfo}>
+              <Typography variant="body2">
+                Last updated at {formatLastRefreshed()} • Auto-refresh {autoRefresh ? 'on' : 'off'}
+              </Typography>
+            </Box>
+            
             <Pagination
               count={studentTotalPages}
               page={studentPage}
