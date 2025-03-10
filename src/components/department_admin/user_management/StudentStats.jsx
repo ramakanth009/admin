@@ -70,7 +70,7 @@ const StudentStats = ({ students, loading }) => {
   ];
 
   return (
-    <Grid container spacing={3} sx={{ mb: 4 }}>
+    <Grid container spacing={3} sx={{ mb: 6 }}>
       {cardData.map((card, index) => (
         <Grid item xs={12} sm={6} md={3} key={index}>
           <Card2
