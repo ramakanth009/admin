@@ -191,8 +191,9 @@ const useStyles = makeStyles({
   },
 });
 
-// Both college admin and department admin use the same login endpoint
-const LOGIN_ENDPOINT = "http://localhost:8000/api/auth/admin/login/";
+// Updated login endpoints for different admin types
+const COLLEGE_ADMIN_LOGIN_ENDPOINT = "http://localhost:8000/api/auth/college-admin/login/";
+const DEPARTMENT_ADMIN_LOGIN_ENDPOINT = "http://localhost:8000/api/auth/department-admin/login/";
 
 const LoginPage = () => {
   const [loginType, setLoginType] = useState("college_admin");
@@ -257,9 +258,12 @@ const LoginPage = () => {
     setError("");
 
     try {
-      // Use the shared login endpoint for both admin types
+      // Use the appropriate login endpoint based on the selected admin type
+      const loginEndpoint = loginType === "college_admin" 
+        ? COLLEGE_ADMIN_LOGIN_ENDPOINT 
+        : DEPARTMENT_ADMIN_LOGIN_ENDPOINT;
       
-      const response = await axios.post(LOGIN_ENDPOINT, {
+      const response = await axios.post(loginEndpoint, {
         email: formData.email,
         password: formData.password,
       });

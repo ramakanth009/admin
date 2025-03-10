@@ -132,8 +132,13 @@ const StudentsTab = () => {
         queryParams += `&department=${encodeURIComponent(studentFilters.department)}`;
       }
       
+      // Modified isActive filter handling
       if (studentFilters.isActive !== '') {
+        // Send the exact boolean value for is_active
         queryParams += `&is_active=${studentFilters.isActive === 'active'}`;
+      } else {
+        // If no filter is selected, don't include is_active parameter to get all students
+        // The backend should return both active and inactive students
       }
       
       if (studentFilters.profileCompleted !== '') {
@@ -143,42 +148,38 @@ const StudentsTab = () => {
       console.log("Fetching students with URL:", `http://localhost:8000/api/college-admin/students/?${queryParams}`);
 
       const token = localStorage.getItem('accessToken');
-      try {
-        const response = await axios.get(
-          `http://localhost:8000/api/college-admin/students/?${queryParams}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        console.log("API Response:", response.data);
-        setStudents(response.data.results || []);
-        setStudentTotalPages(response.data.total_pages || 1);
-      } catch (apiError) {
-        console.error('API call failed:', apiError);
-        
-        // Show the exact error message for debugging
-        if (apiError.response) {
-          console.error('Response data:', apiError.response.data);
-          console.error('Response status:', apiError.response.status);
-          
-          setError(`API Error ${apiError.response.status}: ${JSON.stringify(apiError.response.data)}`);
-        } else if (apiError.request) {
-          console.error('No response received:', apiError.request);
-          setError('No response received from server. Please check your network connection.');
-        } else {
-          console.error('Error setting up request:', apiError.message);
-          setError(`Error: ${apiError.message}`);
+      const response = await axios.get(
+        `http://localhost:8000/api/college-admin/students/?${queryParams}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
+      );
+
+      console.log("API Response:", response.data);
+      console.log("Total students received:", response.data.results.length);
+      console.log("Active students:", response.data.results.filter(s => s.is_active).length);
+      console.log("Inactive students:", response.data.results.filter(s => !s.is_active).length);
+      setStudents(response.data.results || []);
+      setStudentTotalPages(response.data.total_pages || 1);
+    } catch (apiError) {
+      console.error('API call failed:', apiError);
+      
+      // Show the exact error message for debugging
+      if (apiError.response) {
+        console.error('Response data:', apiError.response.data);
+        console.error('Response status:', apiError.response.status);
+        
+        setError(`API Error ${apiError.response.status}: ${JSON.stringify(apiError.response.data)}`);
+      } else if (apiError.request) {
+        console.error('No response received:', apiError.request);
+        setError('No response received from server. Please check your network connection.');
+      } else {
+        console.error('Error setting up request:', apiError.message);
+        setError(`Error: ${apiError.message}`);
       }
-    } catch (error) {
-      console.error('Error fetching students:', error);
-      setError(`Failed to load students: ${error.message}`);
+    } finally {
       setLoading(false);
       setRefreshing(false);
     }

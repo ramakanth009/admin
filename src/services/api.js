@@ -1,3 +1,4 @@
+// src/services/api.js - Updated with correct login endpoints
 import axios from 'axios';
 
 // Base API URL
@@ -73,11 +74,15 @@ apiClient.interceptors.response.use(
 
 // Role-based API endpoints
 const api = {
-  // Authentication
+  // Authentication - Updated with separate login endpoints
   auth: {
-    // Both admin types use the same login endpoint
-    login: (credentials) => 
-      apiClient.post('/auth/admin/login/', credentials),
+    // College Admin login
+    loginCollegeAdmin: (credentials) => 
+      apiClient.post('/auth/college-admin/login/', credentials),
+    
+    // Department Admin login
+    loginDepartmentAdmin: (credentials) => 
+      apiClient.post('/auth/department-admin/login/', credentials),
   },
   
   // College Admin endpoints
