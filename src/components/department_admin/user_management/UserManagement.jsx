@@ -2,8 +2,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 
-// Import the fixed StudentsTab component
-// Make sure it's properly exported and imported
+// Import the updated StudentsTab component
 import StudentsTab from './StudentsTab';
 
 // Department admin colors

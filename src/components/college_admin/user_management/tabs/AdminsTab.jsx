@@ -10,8 +10,6 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Tabs,
-  Tab,
   Pagination,
   CircularProgress,
   Alert,
@@ -59,18 +57,6 @@ const useStyles = makeStyles({
     marginLeft: '8px !important',
     color: primaryColors.main,
   },
-  tabs: {
-    marginBottom: '16px !important',
-    '& .MuiTabs-indicator': {
-      backgroundColor: `${primaryColors.main} !important`,
-    },
-  },
-  tab: {
-    fontWeight: '500 !important',
-    '&.Mui-selected': {
-      color: `${primaryColors.main} !important`,
-    },
-  },
   paginationContainer: {
     display: 'flex',
     justifyContent: 'flex-end',
@@ -88,6 +74,11 @@ const useStyles = makeStyles({
     fontSize: '48px !important',
     marginBottom: '16px',
     color: '#ccc',
+  },
+  sectionTitle: {
+    marginBottom: '16px !important',
+    fontWeight: 'bold !important',
+    color: primaryColors.dark,
   }
 });
 
@@ -96,7 +87,6 @@ const AdminsTab = () => {
   
   // Admins state
   const [admins, setAdmins] = useState([]);
-  const [adminTabValue, setAdminTabValue] = useState(0);
   const [adminPage, setAdminPage] = useState(1);
   const [adminTotalPages, setAdminTotalPages] = useState(1);
   const [adminFilters, setAdminFilters] = useState({
@@ -129,7 +119,7 @@ const AdminsTab = () => {
       // Build query parameters
       let queryParams = `page=${adminPage}&page_size=10`;
       if (adminFilters.department) queryParams += `&department=${adminFilters.department}`;
-      if (adminFilters.isActive) queryParams += `&is_active=${adminFilters.isActive === 'active'}`;
+      if (adminFilters.isActive !== '') queryParams += `&is_active=${adminFilters.isActive === 'active'}`;
       if (adminFilters.role) queryParams += `&role=${adminFilters.role}`;
 
       const token = localStorage.getItem('accessToken');
@@ -162,30 +152,6 @@ const AdminsTab = () => {
     }
   };
 
-  const handleAdminTabChange = (event, newValue) => {
-    setAdminTabValue(newValue);
-    
-    // Update filters based on selected tab
-    if (newValue === 0) { // All Admins
-      setAdminFilters({
-        ...adminFilters,
-        isActive: '',
-      });
-    } else if (newValue === 1) { // Active Admins
-      setAdminFilters({
-        ...adminFilters,
-        isActive: 'active',
-      });
-    } else if (newValue === 2) { // Inactive Admins
-      setAdminFilters({
-        ...adminFilters,
-        isActive: 'inactive',
-      });
-    }
-    
-    setAdminPage(1);
-  };
-
   const handleAdminPageChange = (event, value) => {
     setAdminPage(value);
   };
@@ -205,7 +171,6 @@ const AdminsTab = () => {
       isActive: '',
       role: '',
     });
-    setAdminTabValue(0);
     setAdminPage(1);
   };
 
@@ -232,13 +197,25 @@ const AdminsTab = () => {
 
   return (
     <>
+      <Typography variant="h5" className={classes.sectionTitle}>
+        Admin Management
+      </Typography>
+      
       {/* Admin Statistics Cards */}
       <AdminStats admins={admins} loading={loading} />
 
       {/* Search and filter for admins */}
       <Box className={classes.searchBox}>
         <Box sx={{ flex: 1 }} /> {/* Spacer */}
-        {/* Removed filter button */}
+        <IconButton
+          className={classes.actionButton}
+          onClick={() => setShowFilters(!showFilters)}
+          color={showFilters ? 'primary' : 'default'}
+        >
+          <Tooltip title="Show Filters">
+            <RefreshIcon />
+          </Tooltip>
+        </IconButton>
         <Tooltip title="Refresh">
           <IconButton
             className={classes.actionButton}
@@ -269,19 +246,6 @@ const AdminsTab = () => {
           type="admin"
         />
       )}
-
-      {/* Admin Tabs */}
-      <Tabs
-        value={adminTabValue}
-        onChange={handleAdminTabChange}
-        className={classes.tabs}
-        variant="scrollable"
-        scrollButtons="auto"
-      >
-        <Tab label="All Admins" className={classes.tab} />
-        <Tab label="Active Admins" className={classes.tab} />
-        <Tab label="Inactive Admins" className={classes.tab} />
-      </Tabs>
 
       {/* Admins table */}
       <TableContainer component={Paper} className={classes.tableContainer}>

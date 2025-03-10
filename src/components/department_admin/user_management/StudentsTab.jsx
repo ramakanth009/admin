@@ -10,8 +10,6 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Tabs,
-  Tab,
   Pagination,
   CircularProgress,
   Alert,
@@ -28,11 +26,10 @@ import {
 } from '@mui/icons-material';
 import axios from 'axios';
 
-// Import custom components - ensure these are all exported correctly from their files
+// Import custom components
 import StudentStats from './StudentStats';
 import FilterSection from './FilterSection';
 import StatusChip from './StatusChip';
-// Import the StudentDetailsDialog component - this might be the issue
 import StudentDetailsDialog from './StudentDetailsDialog';
 
 // Department admin colors
@@ -64,18 +61,6 @@ const useStyles = makeStyles({
     marginLeft: '8px !important',
     color: departmentColors.main,
   },
-  tabs: {
-    marginBottom: '16px !important',
-    '& .MuiTabs-indicator': {
-      backgroundColor: `${departmentColors.main} !important`,
-    },
-  },
-  tab: {
-    fontWeight: '500 !important',
-    '&.Mui-selected': {
-      color: `${departmentColors.main} !important`,
-    },
-  },
   paginationContainer: {
     display: 'flex',
     justifyContent: 'flex-end',
@@ -106,7 +91,6 @@ const StudentsTab = () => {
   
   // Students state
   const [students, setStudents] = useState([]);
-  const [studentTabValue, setStudentTabValue] = useState(0);
   const [studentPage, setStudentPage] = useState(1);
   const [studentTotalPages, setStudentTotalPages] = useState(1);
   const [studentFilters, setStudentFilters] = useState({
@@ -144,9 +128,9 @@ const StudentsTab = () => {
       // Build query parameters
       let queryParams = `page=${studentPage}&page_size=10`;
       if (studentFilters.preferredRole) queryParams += `&preferred_role=${studentFilters.preferredRole}`;
-      if (studentFilters.isActive) queryParams += `&is_active=${studentFilters.isActive === 'active'}`;
-      if (studentFilters.profileCompleted) queryParams += `&profile_completed=${studentFilters.profileCompleted === 'completed'}`;
-      if (studentFilters.canUpdateProfile) queryParams += `&can_update_profile=${studentFilters.canUpdateProfile === 'allowed'}`;
+      if (studentFilters.isActive !== '') queryParams += `&is_active=${studentFilters.isActive === 'active'}`;
+      if (studentFilters.profileCompleted !== '') queryParams += `&profile_completed=${studentFilters.profileCompleted === 'completed'}`;
+      if (studentFilters.canUpdateProfile !== '') queryParams += `&can_update_profile=${studentFilters.canUpdateProfile === 'allowed'}`;
 
       const token = localStorage.getItem('accessToken');
       try {
@@ -264,45 +248,6 @@ const StudentsTab = () => {
     }
   };
 
-  const handleStudentTabChange = (event, newValue) => {
-    setStudentTabValue(newValue);
-    
-    // Update filters based on selected tab
-    if (newValue === 0) { // All Students
-      setStudentFilters({
-        ...studentFilters,
-        isActive: '',
-        profileCompleted: '',
-      });
-    } else if (newValue === 1) { // Active Students
-      setStudentFilters({
-        ...studentFilters,
-        isActive: 'active',
-        profileCompleted: '',
-      });
-    } else if (newValue === 2) { // Inactive Students
-      setStudentFilters({
-        ...studentFilters,
-        isActive: 'inactive',
-        profileCompleted: '',
-      });
-    } else if (newValue === 3) { // Profile Completed
-      setStudentFilters({
-        ...studentFilters,
-        profileCompleted: 'completed',
-        isActive: '',
-      });
-    } else if (newValue === 4) { // Update Requests
-      setStudentFilters({
-        ...studentFilters,
-        canUpdateProfile: 'allowed',
-        isActive: '',
-      });
-    }
-    
-    setStudentPage(1);
-  };
-
   const handleStudentPageChange = (event, value) => {
     setStudentPage(value);
   };
@@ -323,7 +268,6 @@ const StudentsTab = () => {
       profileCompleted: '',
       canUpdateProfile: '',
     });
-    setStudentTabValue(0);
     setStudentPage(1);
   };
 
@@ -409,21 +353,6 @@ const StudentsTab = () => {
           type="department_student"
         />
       )}
-
-      {/* Student Tabs - with special tab for update requests */}
-      <Tabs
-        value={studentTabValue}
-        onChange={handleStudentTabChange}
-        className={classes.tabs}
-        variant="scrollable"
-        scrollButtons="auto"
-      >
-        <Tab label="All Students" className={classes.tab} />
-        <Tab label="Active Students" className={classes.tab} />
-        <Tab label="Inactive Students" className={classes.tab} />
-        <Tab label="Profiles Completed" className={classes.tab} />
-        <Tab label="Update Requests" className={classes.tab} />
-      </Tabs>
 
       {/* Students table */}
       <TableContainer component={Paper} className={classes.tableContainer}>
@@ -529,17 +458,15 @@ const StudentsTab = () => {
         )}
       </TableContainer>
 
-      {/* Student details dialog - with correct props */}
-      {StudentDetailsDialog && (
-        <StudentDetailsDialog
-          open={openDialog}
-          handleClose={handleCloseDialog}
-          selectedUser={selectedUser}
-          userDetails={userDetails}
-          loadingDetails={loadingDetails}
-          colors={departmentColors}
-        />
-      )}
+      {/* Student details dialog */}
+      <StudentDetailsDialog
+        open={openDialog}
+        handleClose={handleCloseDialog}
+        selectedUser={selectedUser}
+        userDetails={userDetails}
+        loadingDetails={loadingDetails}
+        colors={departmentColors}
+      />
 
       {/* Snackbar for notifications */}
       <Snackbar

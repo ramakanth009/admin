@@ -10,8 +10,6 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Tabs,
-  Tab,
   Pagination,
   CircularProgress,
   Alert,
@@ -63,18 +61,6 @@ const useStyles = makeStyles({
     marginLeft: '8px !important',
     color: primaryColors.main,
   },
-  tabs: {
-    marginBottom: '16px !important',
-    '& .MuiTabs-indicator': {
-      backgroundColor: `${primaryColors.main} !important`,
-    },
-  },
-  tab: {
-    fontWeight: '500 !important',
-    '&.Mui-selected': {
-      color: `${primaryColors.main} !important`,
-    },
-  },
   paginationContainer: {
     display: 'flex',
     justifyContent: 'flex-end',
@@ -92,6 +78,11 @@ const useStyles = makeStyles({
     fontSize: '48px !important',
     marginBottom: '16px',
     color: '#ccc',
+  },
+  sectionTitle: {
+    marginBottom: '16px !important',
+    fontWeight: 'bold !important',
+    color: primaryColors.dark,
   }
 });
 
@@ -100,7 +91,6 @@ const StudentsTab = () => {
   
   // Students state
   const [students, setStudents] = useState([]);
-  const [studentTabValue, setStudentTabValue] = useState(0);
   const [studentPage, setStudentPage] = useState(1);
   const [studentTotalPages, setStudentTotalPages] = useState(1);
   const [studentFilters, setStudentFilters] = useState({
@@ -137,8 +127,8 @@ const StudentsTab = () => {
       // Build query parameters
       let queryParams = `page=${studentPage}&page_size=10`;
       if (studentFilters.department) queryParams += `&department=${studentFilters.department}`;
-      if (studentFilters.isActive) queryParams += `&is_active=${studentFilters.isActive === 'active'}`;
-      if (studentFilters.profileCompleted) queryParams += `&profile_completed=${studentFilters.profileCompleted === 'completed'}`;
+      if (studentFilters.isActive !== '') queryParams += `&is_active=${studentFilters.isActive === 'active'}`;
+      if (studentFilters.profileCompleted !== '') queryParams += `&profile_completed=${studentFilters.profileCompleted === 'completed'}`;
 
       const token = localStorage.getItem('accessToken');
       const response = await axios.get(
@@ -199,45 +189,6 @@ const StudentsTab = () => {
     }
   };
 
-  const handleStudentTabChange = (event, newValue) => {
-    setStudentTabValue(newValue);
-    
-    // Update filters based on selected tab
-    if (newValue === 0) { // All Students
-      setStudentFilters({
-        ...studentFilters,
-        isActive: '',
-        profileCompleted: '',
-      });
-    } else if (newValue === 1) { // Active Students
-      setStudentFilters({
-        ...studentFilters,
-        isActive: 'active',
-        profileCompleted: '',
-      });
-    } else if (newValue === 2) { // Inactive Students
-      setStudentFilters({
-        ...studentFilters,
-        isActive: 'inactive',
-        profileCompleted: '',
-      });
-    } else if (newValue === 3) { // Profile Completed
-      setStudentFilters({
-        ...studentFilters,
-        profileCompleted: 'completed',
-        isActive: '',
-      });
-    } else if (newValue === 4) { // Profile Incomplete
-      setStudentFilters({
-        ...studentFilters,
-        profileCompleted: 'incomplete',
-        isActive: '',
-      });
-    }
-    
-    setStudentPage(1);
-  };
-
   const handleStudentPageChange = (event, value) => {
     setStudentPage(value);
   };
@@ -257,7 +208,6 @@ const StudentsTab = () => {
       isActive: '',
       profileCompleted: '',
     });
-    setStudentTabValue(0);
     setStudentPage(1);
   };
 
@@ -296,6 +246,10 @@ const StudentsTab = () => {
 
   return (
     <>
+      <Typography variant="h5" className={classes.sectionTitle}>
+        Student Management
+      </Typography>
+    
       {/* Student Statistics Cards */}
       <StudentStats students={students} loading={loading} />
 
@@ -339,21 +293,6 @@ const StudentsTab = () => {
           type="student"
         />
       )}
-
-      {/* Student Tabs */}
-      <Tabs
-        value={studentTabValue}
-        onChange={handleStudentTabChange}
-        className={classes.tabs}
-        variant="scrollable"
-        scrollButtons="auto"
-      >
-        <Tab label="All Students" className={classes.tab} />
-        <Tab label="Active Students" className={classes.tab} />
-        <Tab label="Inactive Students" className={classes.tab} />
-        <Tab label="Profile Completed" className={classes.tab} />
-        <Tab label="Profile Incomplete" className={classes.tab} />
-      </Tabs>
 
       {/* Students table */}
       <TableContainer component={Paper} className={classes.tableContainer}>
