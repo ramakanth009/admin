@@ -40,7 +40,7 @@ const useStyles = makeStyles({
     marginBottom: '20px',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
   },
   tableContainer: {
     marginTop: '16px',
@@ -79,6 +79,11 @@ const useStyles = makeStyles({
     marginBottom: '16px !important',
     fontWeight: 'bold !important',
     color: primaryColors.dark,
+  },
+  idCell: {
+    fontFamily: 'monospace',
+    fontWeight: '500',
+    color: '#555',
   }
 });
 
@@ -98,7 +103,6 @@ const AdminsTab = () => {
   // Common state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -204,18 +208,17 @@ const AdminsTab = () => {
       {/* Admin Statistics Cards */}
       <AdminStats admins={admins} loading={loading} />
 
-      {/* Search and filter for admins */}
+      {/* Admin Filters section - Always visible */}
+      <FilterSection
+        filters={adminFilters}
+        handleFilterChange={handleAdminFilterChange}
+        resetFilters={resetAdminFilters}
+        availableDepartments={getAvailableDepartments()}
+        type="admin"
+      />
+      
+      {/* Refresh button */}
       <Box className={classes.searchBox}>
-        <Box sx={{ flex: 1 }} /> {/* Spacer */}
-        <IconButton
-          className={classes.actionButton}
-          onClick={() => setShowFilters(!showFilters)}
-          color={showFilters ? 'primary' : 'default'}
-        >
-          <Tooltip title="Show Filters">
-            <RefreshIcon />
-          </Tooltip>
-        </IconButton>
         <Tooltip title="Refresh">
           <IconButton
             className={classes.actionButton}
@@ -236,22 +239,12 @@ const AdminsTab = () => {
         </Tooltip>
       </Box>
 
-      {/* Admin Filters section */}
-      {showFilters && (
-        <FilterSection
-          filters={adminFilters}
-          handleFilterChange={handleAdminFilterChange}
-          resetFilters={resetAdminFilters}
-          availableDepartments={getAvailableDepartments()}
-          type="admin"
-        />
-      )}
-
       {/* Admins table */}
       <TableContainer component={Paper} className={classes.tableContainer}>
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell>ID</TableCell>
               <TableCell>Admin Name</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Role</TableCell>
@@ -263,19 +256,19 @@ const AdminsTab = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
                   <CircularProgress size={40} sx={{ color: primaryColors.main }} />
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
                   <Alert severity="error">{error}</Alert>
                 </TableCell>
               </TableRow>
             ) : admins.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
                   <Box className={classes.emptyMessage}>
                     <AdminIcon className={classes.emptyIcon} />
                     <Typography variant="h6">No admins found</Typography>
@@ -291,6 +284,7 @@ const AdminsTab = () => {
                   key={admin.id}
                   className={classes.tableRow}
                 >
+                  <TableCell className={classes.idCell}>{admin.id}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <AdminIcon sx={{ mr: 1, color: primaryColors.main }} />

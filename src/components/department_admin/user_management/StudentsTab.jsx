@@ -20,7 +20,6 @@ import { makeStyles } from '@mui/styles';
 import {
   Refresh as RefreshIcon,
   Visibility as VisibilityIcon,
-  FilterList as FilterListIcon,
   People as PeopleIcon,
   School as SchoolIcon,
 } from '@mui/icons-material';
@@ -44,7 +43,7 @@ const useStyles = makeStyles({
     marginBottom: '20px',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
   },
   tableContainer: {
     marginTop: '16px',
@@ -83,6 +82,11 @@ const useStyles = makeStyles({
     marginBottom: '16px !important',
     fontWeight: 'bold !important',
     color: departmentColors.dark,
+  },
+  idCell: {
+    fontFamily: 'monospace',
+    fontWeight: '500',
+    color: '#555',
   }
 });
 
@@ -103,7 +107,6 @@ const StudentsTab = () => {
   // Common state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -243,7 +246,6 @@ const StudentsTab = () => {
   const handleRefresh = () => {
     if (!refreshing) {
       setRefreshing(true);
-      setStudentPage(1);
       fetchStudents();
     }
   };
@@ -313,16 +315,17 @@ const StudentsTab = () => {
       {/* Student Statistics Cards */}
       <StudentStats students={students} loading={loading} />
 
-      {/* Search and filter for students */}
+      {/* Student Filters section - Always visible */}
+      <FilterSection
+        filters={studentFilters}
+        handleFilterChange={handleStudentFilterChange}
+        resetFilters={resetStudentFilters}
+        availableRoles={getAvailableRoles()}
+        type="department_student"
+      />
+      
+      {/* Refresh button */}
       <Box className={classes.searchBox}>
-        <Box sx={{ flex: 1 }} /> {/* Spacer */}
-        <IconButton
-          className={classes.actionButton}
-          onClick={() => setShowFilters(!showFilters)}
-          color={showFilters ? 'primary' : 'default'}
-        >
-          <FilterListIcon />
-        </IconButton>
         <Tooltip title="Refresh">
           <IconButton
             className={classes.actionButton}
@@ -343,22 +346,12 @@ const StudentsTab = () => {
         </Tooltip>
       </Box>
 
-      {/* Student Filters section - with department-specific options */}
-      {showFilters && (
-        <FilterSection
-          filters={studentFilters}
-          handleFilterChange={handleStudentFilterChange}
-          resetFilters={resetStudentFilters}
-          availableRoles={getAvailableRoles()}
-          type="department_student"
-        />
-      )}
-
       {/* Students table */}
       <TableContainer component={Paper} className={classes.tableContainer}>
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell>ID</TableCell>
               <TableCell>Student Name</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Role Preference</TableCell>
@@ -371,19 +364,19 @@ const StudentsTab = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
                   <CircularProgress size={40} sx={{ color: departmentColors.main }} />
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
                   <Alert severity="error">{error}</Alert>
                 </TableCell>
               </TableRow>
             ) : students.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
                   <Box className={classes.emptyMessage}>
                     <PeopleIcon className={classes.emptyIcon} />
                     <Typography variant="h6">No students found</Typography>
@@ -400,6 +393,7 @@ const StudentsTab = () => {
                   className={classes.tableRow}
                   onClick={() => handleViewStudent(student)}
                 >
+                  <TableCell className={classes.idCell}>{student.id}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <SchoolIcon sx={{ mr: 1, color: departmentColors.main }} />

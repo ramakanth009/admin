@@ -20,7 +20,6 @@ import { makeStyles } from '@mui/styles';
 import {
   Refresh as RefreshIcon,
   Visibility as VisibilityIcon,
-  FilterList as FilterListIcon,
   People as PeopleIcon,
   School as SchoolIcon,
 } from '@mui/icons-material';
@@ -44,7 +43,7 @@ const useStyles = makeStyles({
     marginBottom: '20px',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
   },
   tableContainer: {
     marginTop: '16px',
@@ -83,6 +82,11 @@ const useStyles = makeStyles({
     marginBottom: '16px !important',
     fontWeight: 'bold !important',
     color: primaryColors.dark,
+  },
+  idCell: {
+    fontFamily: 'monospace',
+    fontWeight: '500',
+    color: '#555',
   }
 });
 
@@ -102,7 +106,6 @@ const StudentsTab = () => {
   // Common state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -124,62 +127,56 @@ const StudentsTab = () => {
       setLoading(true);
       setError(null);
 
-      // Build query parameters - Only add parameters that have values
+      // Build query parameters
       let queryParams = `page=${studentPage}&page_size=10`;
       
-      // Only add filters if they have values
       if (studentFilters.department) {
         queryParams += `&department=${encodeURIComponent(studentFilters.department)}`;
       }
       
-      // Modified isActive filter handling
       if (studentFilters.isActive !== '') {
-        // Send the exact boolean value for is_active
         queryParams += `&is_active=${studentFilters.isActive === 'active'}`;
-      } else {
-        // If no filter is selected, don't include is_active parameter to get all students
-        // The backend should return both active and inactive students
       }
       
       if (studentFilters.profileCompleted !== '') {
         queryParams += `&profile_completed=${studentFilters.profileCompleted === 'completed'}`;
       }
 
-      console.log("Fetching students with URL:", `http://localhost:8000/api/college-admin/students/?${queryParams}`);
-
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get(
-        `http://localhost:8000/api/college-admin/students/?${queryParams}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      try {
+        const response = await axios.get(
+          `http://localhost:8000/api/college-admin/students/?${queryParams}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      console.log("API Response:", response.data);
-      console.log("Total students received:", response.data.results.length);
-      console.log("Active students:", response.data.results.filter(s => s.is_active).length);
-      console.log("Inactive students:", response.data.results.filter(s => !s.is_active).length);
-      setStudents(response.data.results || []);
-      setStudentTotalPages(response.data.total_pages || 1);
-    } catch (apiError) {
-      console.error('API call failed:', apiError);
-      
-      // Show the exact error message for debugging
-      if (apiError.response) {
-        console.error('Response data:', apiError.response.data);
-        console.error('Response status:', apiError.response.status);
+        setStudents(response.data.results || []);
+        setStudentTotalPages(response.data.total_pages || 1);
+      } catch (apiError) {
+        console.error('API call failed:', apiError);
         
-        setError(`API Error ${apiError.response.status}: ${JSON.stringify(apiError.response.data)}`);
-      } else if (apiError.request) {
-        console.error('No response received:', apiError.request);
-        setError('No response received from server. Please check your network connection.');
-      } else {
-        console.error('Error setting up request:', apiError.message);
-        setError(`Error: ${apiError.message}`);
+        if (apiError.response) {
+          console.error('Response data:', apiError.response.data);
+          console.error('Response status:', apiError.response.status);
+          
+          setError(`API Error ${apiError.response.status}: ${JSON.stringify(apiError.response.data)}`);
+        } else if (apiError.request) {
+          console.error('No response received:', apiError.request);
+          setError('No response received from server. Please check your network connection.');
+        } else {
+          console.error('Error setting up request:', apiError.message);
+          setError(`Error: ${apiError.message}`);
+        }
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-    } finally {
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      setError('Failed to load students. Please try again.');
       setLoading(false);
       setRefreshing(false);
     }
@@ -201,7 +198,6 @@ const StudentsTab = () => {
           }
         );
 
-        console.log("Student details:", response.data);
         setUserDetails(response.data.data);
       } catch (apiError) {
         console.error('API call for student details failed:', apiError);
@@ -236,13 +232,6 @@ const StudentsTab = () => {
   const handleRefresh = () => {
     if (!refreshing) {
       setRefreshing(true);
-      // Reset filters on refresh to ensure all students are loaded
-      setStudentFilters({
-        department: '',
-        isActive: '',
-        profileCompleted: '',
-      });
-      setStudentPage(1);
       fetchStudents();
     }
   };
@@ -311,16 +300,17 @@ const StudentsTab = () => {
       {/* Student Statistics Cards */}
       <StudentStats students={students} loading={loading} />
 
-      {/* Search and filter for students */}
+      {/* Student Filters section - Always visible */}
+      <FilterSection
+        filters={studentFilters}
+        handleFilterChange={handleStudentFilterChange}
+        resetFilters={resetStudentFilters}
+        availableDepartments={getAvailableDepartments()}
+        type="student"
+      />
+      
+      {/* Refresh button */}
       <Box className={classes.searchBox}>
-        <Box sx={{ flex: 1 }} /> {/* Spacer */}
-        <IconButton
-          className={classes.actionButton}
-          onClick={() => setShowFilters(!showFilters)}
-          color={showFilters ? 'primary' : 'default'}
-        >
-          <FilterListIcon />
-        </IconButton>
         <Tooltip title="Refresh">
           <IconButton
             className={classes.actionButton}
@@ -341,22 +331,12 @@ const StudentsTab = () => {
         </Tooltip>
       </Box>
 
-      {/* Student Filters section */}
-      {showFilters && (
-        <FilterSection
-          filters={studentFilters}
-          handleFilterChange={handleStudentFilterChange}
-          resetFilters={resetStudentFilters}
-          availableDepartments={getAvailableDepartments()}
-          type="student"
-        />
-      )}
-
       {/* Students table */}
       <TableContainer component={Paper} className={classes.tableContainer}>
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell>ID</TableCell>
               <TableCell>Student Name</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Department</TableCell>
@@ -369,19 +349,19 @@ const StudentsTab = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
                   <CircularProgress size={40} sx={{ color: primaryColors.main }} />
                 </TableCell>
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
                   <Alert severity="error">{error}</Alert>
                 </TableCell>
               </TableRow>
             ) : students.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
                   <Box className={classes.emptyMessage}>
                     <PeopleIcon className={classes.emptyIcon} />
                     <Typography variant="h6">No students found</Typography>
@@ -398,6 +378,7 @@ const StudentsTab = () => {
                   className={classes.tableRow}
                   onClick={() => handleViewStudent(student)}
                 >
+                  <TableCell className={classes.idCell}>{student.id}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <SchoolIcon sx={{ mr: 1, color: primaryColors.main }} />

@@ -10,6 +10,7 @@ import {
   Button 
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
+import { FilterList as FilterListIcon } from '@mui/icons-material';
 
 // Admin dashboard primary colors
 const primaryColors = {
@@ -19,6 +20,8 @@ const primaryColors = {
 };
 
 const useStyles = makeStyles({
+  
+
   filterSection: {
     padding: '16px',
     marginBottom: '16px',
@@ -27,6 +30,8 @@ const useStyles = makeStyles({
   filterTitle: {
     fontWeight: '500 !important',
     marginBottom: '16px !important',
+    display: 'flex',
+    alignItems: 'center',
   },
   filterRow: {
     display: 'flex',
@@ -35,7 +40,28 @@ const useStyles = makeStyles({
     marginBottom: '16px',
   },
   filterFormControl: {
-    minWidth: '200px',
+    minWidth: '200px !important',
+  },
+  buttonContainer: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '10px',
+  },
+  resetButton: {
+    marginTop: '10px !important',
+    backgroundColor: '#f5f5f5 !important',
+    color: '#666 !important',
+    '&:hover': {
+      backgroundColor: '#e0e0e0 !important',
+    },
+  },
+  clearButton: {
+    marginTop: '10px !important',
+    backgroundColor: `${primaryColors.light}15 !important`,
+    color: `${primaryColors.main} !important`,
+    '&:hover': {
+      backgroundColor: `${primaryColors.light}30 !important`,
+    },
   },
 });
 
@@ -48,14 +74,25 @@ const FilterSection = ({
 }) => {
   const classes = useStyles();
 
+  // Check if any filters are applied
+  const areFiltersApplied = () => {
+    return Object.values(filters).some(value => value !== '');
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    resetFilters();
+  };
+
   return (
     <Paper className={classes.filterSection} elevation={1}>
       <Typography variant="h6" className={classes.filterTitle}>
+        <FilterListIcon sx={{ mr: 1, color: primaryColors.main }} />
         Filters
       </Typography>
       <Box className={classes.filterRow}>
         <FormControl className={classes.filterFormControl} size="small">
-          <InputLabel>Department</InputLabel>
+          <InputLabel className='inputbox'>Department</InputLabel>
           <Select
             name="department"
             value={filters.department}
@@ -112,8 +149,18 @@ const FilterSection = ({
             </Select>
           </FormControl>
         )}
-
-        {/* Removed reset filters button */}
+      </Box>
+      
+      <Box className={classes.buttonContainer}>
+        <Button 
+          variant="outlined" 
+          size="small"
+          onClick={clearFilters}
+          disabled={!areFiltersApplied()}
+          className={classes.clearButton}
+        >
+          Clear Filters
+        </Button>
       </Box>
     </Paper>
   );

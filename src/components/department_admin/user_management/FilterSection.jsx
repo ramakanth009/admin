@@ -10,6 +10,7 @@ import {
   Button 
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
+import { FilterList as FilterListIcon } from '@mui/icons-material';
 
 // Department admin colors
 const departmentColors = {
@@ -27,6 +28,8 @@ const useStyles = makeStyles({
   filterTitle: {
     fontWeight: '500 !important',
     marginBottom: '16px !important',
+    display: 'flex',
+    alignItems: 'center',
   },
   filterRow: {
     display: 'flex',
@@ -35,7 +38,28 @@ const useStyles = makeStyles({
     marginBottom: '16px',
   },
   filterFormControl: {
-    minWidth: '200px',
+    minWidth: '200px !important',
+  },
+  buttonContainer: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '10px',
+  },
+  resetButton: {
+    marginTop: '10px !important',
+    backgroundColor: '#f5f5f5 !important',
+    color: '#666 !important',
+    '&:hover': {
+      backgroundColor: '#e0e0e0 !important',
+    },
+  },
+  clearButton: {
+    marginTop: '10px !important',
+    backgroundColor: `${departmentColors.light}15 !important`,
+    color: `${departmentColors.main} !important`,
+    '&:hover': {
+      backgroundColor: `${departmentColors.light}30 !important`,
+    },
   },
 });
 
@@ -48,9 +72,20 @@ const FilterSection = ({
 }) => {
   const classes = useStyles();
 
+  // Check if any filters are applied
+  const areFiltersApplied = () => {
+    return Object.values(filters).some(value => value !== '');
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    resetFilters();
+  };
+
   return (
     <Paper className={classes.filterSection} elevation={1}>
       <Typography variant="h6" className={classes.filterTitle}>
+        <FilterListIcon sx={{ mr: 1, color: departmentColors.main }} />
         Filters
       </Typography>
       <Box className={classes.filterRow}>
@@ -118,21 +153,17 @@ const FilterSection = ({
             </Select>
           </FormControl>
         )}
-
+      </Box>
+      
+      <Box className={classes.buttonContainer}>
         <Button 
           variant="outlined" 
-          onClick={resetFilters}
-          sx={{ 
-            height: '40px',
-            color: departmentColors.main,
-            borderColor: departmentColors.main,
-            '&:hover': {
-              borderColor: departmentColors.dark,
-              backgroundColor: 'rgba(76, 175, 80, 0.08)'
-            }
-          }}
+          size="small"
+          onClick={clearFilters}
+          disabled={!areFiltersApplied()}
+          className={classes.clearButton}
         >
-          Reset Filters
+          Clear Filters
         </Button>
       </Box>
     </Paper>
