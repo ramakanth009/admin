@@ -26,6 +26,7 @@ import axios from 'axios';
 // Import custom components
 import AdminStats from '../AdminStats';
 import StatusChip from '../StatusChip';
+import apiService from '../../../../services/apiService';
 
 // Admin dashboard primary colors
 const primaryColors = {
@@ -114,23 +115,19 @@ const AdminsTab = () => {
       setLoading(true);
       setError(null);
 
-      // Build query parameters
-      let queryParams = `page=${adminPage}&page_size=10`;
-
-      const token = localStorage.getItem('accessToken');
-      const response = await axios.get(
-        `http://localhost:8000/api/college-admin/department-admins/?${queryParams}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setAdmins(response.data.results || []);
-      setAdminTotalPages(response.data.total_pages || 1);
-      setLoading(false);
-      setRefreshing(false);
+      try {
+        const response = await apiService.collegeAdmin.getDepartmentAdmins(adminPage);
+        
+        setAdmins(response.data.results || []);
+        setAdminTotalPages(response.data.total_pages || 1);
+        setLoading(false);
+        setRefreshing(false);
+      } catch (error) {
+        console.error('Error fetching admins:', error);
+        setError('Failed to load admins. Please try again.');
+        setLoading(false);
+        setRefreshing(false);
+      }
     } catch (error) {
       console.error('Error fetching admins:', error);
       setError('Failed to load admins. Please try again.');

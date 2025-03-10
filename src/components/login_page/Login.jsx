@@ -33,6 +33,7 @@ import {
 import { useAuth } from "../AuthContext";
 import LoadingSpinner from "../common/LoadingSpinner";
 import LoadingButton from "../common/LoadingButton";
+import apiService from '../../services/apiService';
 
 // Admin dashboard primary colors
 const primaryColors = {
@@ -259,14 +260,16 @@ const LoginPage = () => {
 
     try {
       // Use the appropriate login endpoint based on the selected admin type
-      const loginEndpoint = loginType === "college_admin" 
-        ? COLLEGE_ADMIN_LOGIN_ENDPOINT 
-        : DEPARTMENT_ADMIN_LOGIN_ENDPOINT;
-      
-      const response = await axios.post(loginEndpoint, {
-        email: formData.email,
-        password: formData.password,
-      });
+      const response = await (loginType === "college_admin" 
+        ? apiService.auth.loginCollegeAdmin({
+            email: formData.email,
+            password: formData.password,
+          })
+        : apiService.auth.loginDepartmentAdmin({
+            email: formData.email,
+            password: formData.password,
+          })
+      );
 
       if (response.data.access) {
         // Use the login function from AuthContext

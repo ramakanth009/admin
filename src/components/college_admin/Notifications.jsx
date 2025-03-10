@@ -19,7 +19,7 @@ import {
   Notifications as NotificationsIcon,
   Refresh as RefreshIcon 
 } from '@mui/icons-material';
-import axios from 'axios';
+import apiService from '../../services/apiService'; // Replace axios with apiService
 import LoadingSpinner from '../common/LoadingSpinner';
 
 // Admin dashboard primary colors
@@ -220,19 +220,14 @@ const Notifications = () => {
     setError(null);
     
     try {
-      const token = localStorage.getItem('accessToken');
-      // In a real implementation, you would uncomment this and use your actual API endpoint
-      // const response = await axios.get('http://localhost:8000/api/profiles/my_notifications/', {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      // });
-      
+      // In a real implementation, uncomment this and remove the mock data
+      // const response = await apiService.notifications.getNotifications();
       // setNotifications(response.data.notifications || []);
       // setUnreadCount(response.data.unread_count || 0);
+      
       setRetryCount(0); // Reset retry count on success
       
-      // Simulate API delay
+      // Simulate API delay - This would be removed in production
       setTimeout(() => {
         if (isRefresh) {
           setRefreshing(false);
@@ -300,15 +295,10 @@ const Notifications = () => {
     setError(null);
     
     try {
-      const token = localStorage.getItem('accessToken');
-      // In a real implementation, you would uncomment this
-      // await axios.post('http://localhost:8000/api/profiles/mark_all_notifications_read/', {}, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      // });
+      // In a real implementation, uncomment this
+      // await apiService.notifications.markAllNotificationsRead();
       
-      // Simulate API call
+      // Simulate API call - This would be removed in production
       setTimeout(() => {
         // Update UI without making another API call
         setNotifications(prevNotifications => 
@@ -330,15 +320,10 @@ const Notifications = () => {
 
   const handleMarkAsRead = async (id) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      // In a real implementation, you would uncomment this
-      // await axios.post(`http://localhost:8000/api/profiles/${id}/mark_notification_read/`, {}, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      // });
+      // In a real implementation, uncomment this
+      // await apiService.notifications.markNotificationRead(id);
       
-      // Simulate API call
+      // Simulate API call - This would be removed in production
       // Update UI without making another API call
       setNotifications(prevNotifications => 
         prevNotifications.map(notification => 

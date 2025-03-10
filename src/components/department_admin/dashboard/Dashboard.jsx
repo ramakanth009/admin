@@ -14,7 +14,7 @@ import {
   Refresh as RefreshIcon,
   School as SchoolIcon,
 } from "@mui/icons-material";
-import axios from "axios";
+import apiService from '../../../services/apiService';
 
 // Import modular components
 import WelcomeCard from "./WelcomeCard";
@@ -142,15 +142,7 @@ const Dashboard = () => {
       setRefreshing(true);
       setError(null);
 
-      const token = localStorage.getItem("accessToken");
-      const response = await axios.get(
-        "http://localhost:8000/api/department-admin/dashboard/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await apiService.departmentAdmin.getDashboard();
       
       setDashboardData(response.data);
 

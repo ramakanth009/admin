@@ -31,6 +31,7 @@ import StudentStats from './StudentStats';
 import FilterSection from './FilterSection';
 import StatusChip from './StatusChip';
 import StudentDetailsDialog from './StudentDetailsDialog';
+import apiService from '../../../services/apiService';
 
 // Department admin colors
 const departmentColors = {
@@ -140,24 +141,19 @@ const StudentsTab = () => {
       }
       setError(null);
 
-      // Build query parameters
-      let queryParams = `page=${studentPage}&page_size=10`;
-      if (studentFilters.preferredRole) queryParams += `&preferred_role=${studentFilters.preferredRole}`;
-      if (studentFilters.isActive !== '') queryParams += `&is_active=${studentFilters.isActive === 'active'}`;
-      if (studentFilters.profileCompleted !== '') queryParams += `&profile_completed=${studentFilters.profileCompleted === 'completed'}`;
-      if (studentFilters.canUpdateProfile !== '') queryParams += `&can_update_profile=${studentFilters.canUpdateProfile === 'allowed'}`;
+      // Create filters object in the expected format
+      const filters = {
+        preferredRole: studentFilters.preferredRole || undefined,
+        isActive: studentFilters.isActive !== '' ? studentFilters.isActive === 'active' : undefined,
+        profileCompleted: studentFilters.profileCompleted !== '' ? 
+          studentFilters.profileCompleted === 'completed' : undefined,
+        canUpdateProfile: studentFilters.canUpdateProfile !== '' ?
+          studentFilters.canUpdateProfile === 'allowed' : undefined
+      };
 
-      const token = localStorage.getItem('accessToken');
       try {
-        const response = await axios.get(
-          `http://localhost:8000/api/department-admin/students/?${queryParams}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
+        const response = await apiService.departmentAdmin.getStudents(studentPage, filters);
+        
         setStudents(response.data.results || []);
         setStudentTotalPages(response.data.total_pages || 1);
         setLastRefreshed(new Date());
@@ -251,17 +247,8 @@ const StudentsTab = () => {
       setLoadingDetails(true);
       setError(null);
 
-      const token = localStorage.getItem('accessToken');
       try {
-        const response = await axios.get(
-          `http://localhost:8000/api/department-admin/student-details/${studentId}/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
+        const response = await apiService.departmentAdmin.getStudentDetails(studentId);
         setUserDetails(response.data.data);
       } catch (apiError) {
         console.error('API call for student details failed:', apiError);

@@ -25,6 +25,7 @@ import {
   School as SchoolIcon,
 } from '@mui/icons-material';
 import axios from 'axios';
+import apiService from '../../../../services/apiService';
 
 // Import custom components
 import StudentStats from '../StudentStats';
@@ -139,32 +140,17 @@ const StudentsTab = () => {
       }
       setError(null);
 
-      // Build query parameters
-      let queryParams = `page=${studentPage}&page_size=10`;
-      
-      if (studentFilters.department) {
-        queryParams += `&department=${encodeURIComponent(studentFilters.department)}`;
-      }
-      
-      if (studentFilters.isActive !== '') {
-        queryParams += `&is_active=${studentFilters.isActive === 'active'}`;
-      }
-      
-      if (studentFilters.profileCompleted !== '') {
-        queryParams += `&profile_completed=${studentFilters.profileCompleted === 'completed'}`;
-      }
+      // Create filters object in the expected format
+      const filters = {
+        department: studentFilters.department || undefined,
+        isActive: studentFilters.isActive !== '' ? studentFilters.isActive === 'active' : undefined,
+        profileCompleted: studentFilters.profileCompleted !== '' ? 
+          studentFilters.profileCompleted === 'completed' : undefined
+      };
 
-      const token = localStorage.getItem('accessToken');
       try {
-        const response = await axios.get(
-          `http://localhost:8000/api/college-admin/students/?${queryParams}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
+        const response = await apiService.collegeAdmin.getStudents(studentPage, filters);
+        
         setStudents(response.data.results || []);
         setStudentTotalPages(response.data.total_pages || 1);
         setLastRefreshed(new Date());
@@ -226,17 +212,8 @@ const StudentsTab = () => {
       setLoadingDetails(true);
       setError(null);
 
-      const token = localStorage.getItem('accessToken');
       try {
-        const response = await axios.get(
-          `http://localhost:8000/api/college-admin/student-details/${studentId}/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
+        const response = await apiService.collegeAdmin.getStudentDetails(studentId);
         setUserDetails(response.data.data);
       } catch (apiError) {
         console.error('API call for student details failed:', apiError);
