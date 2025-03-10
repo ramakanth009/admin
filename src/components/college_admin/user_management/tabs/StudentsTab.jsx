@@ -124,29 +124,61 @@ const StudentsTab = () => {
       setLoading(true);
       setError(null);
 
-      // Build query parameters
+      // Build query parameters - Only add parameters that have values
       let queryParams = `page=${studentPage}&page_size=10`;
-      if (studentFilters.department) queryParams += `&department=${studentFilters.department}`;
-      if (studentFilters.isActive !== '') queryParams += `&is_active=${studentFilters.isActive === 'active'}`;
-      if (studentFilters.profileCompleted !== '') queryParams += `&profile_completed=${studentFilters.profileCompleted === 'completed'}`;
+      
+      // Only add filters if they have values
+      if (studentFilters.department) {
+        queryParams += `&department=${encodeURIComponent(studentFilters.department)}`;
+      }
+      
+      if (studentFilters.isActive !== '') {
+        queryParams += `&is_active=${studentFilters.isActive === 'active'}`;
+      }
+      
+      if (studentFilters.profileCompleted !== '') {
+        queryParams += `&profile_completed=${studentFilters.profileCompleted === 'completed'}`;
+      }
+
+      console.log("Fetching students with URL:", `http://localhost:8000/api/college-admin/students/?${queryParams}`);
 
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get(
-        `http://localhost:8000/api/college-admin/students/?${queryParams}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      try {
+        const response = await axios.get(
+          `http://localhost:8000/api/college-admin/students/?${queryParams}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      setStudents(response.data.results || []);
-      setStudentTotalPages(response.data.total_pages || 1);
-      setLoading(false);
-      setRefreshing(false);
+        console.log("API Response:", response.data);
+        setStudents(response.data.results || []);
+        setStudentTotalPages(response.data.total_pages || 1);
+      } catch (apiError) {
+        console.error('API call failed:', apiError);
+        
+        // Show the exact error message for debugging
+        if (apiError.response) {
+          console.error('Response data:', apiError.response.data);
+          console.error('Response status:', apiError.response.status);
+          
+          setError(`API Error ${apiError.response.status}: ${JSON.stringify(apiError.response.data)}`);
+        } else if (apiError.request) {
+          console.error('No response received:', apiError.request);
+          setError('No response received from server. Please check your network connection.');
+        } else {
+          console.error('Error setting up request:', apiError.message);
+          setError(`Error: ${apiError.message}`);
+        }
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
     } catch (error) {
       console.error('Error fetching students:', error);
-      setError('Failed to load students. Please try again.');
+      setError(`Failed to load students: ${error.message}`);
       setLoading(false);
       setRefreshing(false);
     }
@@ -158,32 +190,57 @@ const StudentsTab = () => {
       setError(null);
 
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get(
-        `http://localhost:8000/api/college-admin/student-details/${studentId}/`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      try {
+        const response = await axios.get(
+          `http://localhost:8000/api/college-admin/student-details/${studentId}/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      setUserDetails(response.data.data);
-      setLoadingDetails(false);
+        console.log("Student details:", response.data);
+        setUserDetails(response.data.data);
+      } catch (apiError) {
+        console.error('API call for student details failed:', apiError);
+        
+        if (apiError.response) {
+          setSnackbar({
+            open: true,
+            message: `Failed to load student details: ${JSON.stringify(apiError.response.data)}`,
+            severity: 'error',
+          });
+        } else {
+          setSnackbar({
+            open: true,
+            message: 'Failed to load student details. Network error.',
+            severity: 'error',
+          });
+        }
+      } finally {
+        setLoadingDetails(false);
+      }
     } catch (error) {
       console.error('Error fetching student details:', error);
       setSnackbar({
         open: true,
-        message: 'Failed to load student details. Please try again.',
+        message: `Failed to load student details: ${error.message}`,
         severity: 'error',
       });
       setLoadingDetails(false);
-      setOpenDialog(false);
     }
   };
 
   const handleRefresh = () => {
     if (!refreshing) {
       setRefreshing(true);
+      // Reset filters on refresh to ensure all students are loaded
+      setStudentFilters({
+        department: '',
+        isActive: '',
+        profileCompleted: '',
+      });
       setStudentPage(1);
       fetchStudents();
     }
@@ -195,10 +252,10 @@ const StudentsTab = () => {
 
   const handleStudentFilterChange = (event) => {
     const { name, value } = event.target;
-    setStudentFilters({
-      ...studentFilters,
+    setStudentFilters(prevFilters => ({
+      ...prevFilters,
       [name]: value,
-    });
+    }));
     setStudentPage(1);
   };
 
