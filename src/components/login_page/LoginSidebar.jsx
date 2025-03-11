@@ -9,7 +9,12 @@ import { makeStyles } from '@mui/styles';
 import { 
   School as SchoolIcon,
   SupervisorAccount as AdminIcon,
-  CheckCircle as CheckCircleIcon 
+  CheckCircle as CheckCircleIcon,
+  Dashboard as DashboardIcon,
+  PeopleAlt as PeopleAltIcon,
+  Assessment as AssessmentIcon,
+  Settings as SettingsIcon,
+  Apartment as ApartmentIcon 
 } from '@mui/icons-material';
 import { getPrimaryColors } from '../../utils/colors';
 
@@ -129,15 +134,6 @@ const useStyles = makeStyles({
   },
 });
 
-// Feature items with icons
-const features = [
-  { text: 'Access to comprehensive learning materials', icon: <CheckCircleIcon /> },
-  { text: 'Interactive quizzes and assessments', icon: <CheckCircleIcon /> },
-  { text: 'Track your progress in real-time', icon: <CheckCircleIcon /> },
-  { text: 'Connect with expert instructors', icon: <CheckCircleIcon /> },
-  { text: 'Join a community of learners', icon: <CheckCircleIcon /> },
-];
-
 /**
  * Login sidebar component for the login page
  * 
@@ -147,6 +143,72 @@ const features = [
 const LoginSidebar = ({ role = 'college_admin' }) => {
   const colors = getPrimaryColors(role);
   const classes = useStyles({ colors });
+  
+  // Role-specific title and welcome message
+  const getRoleTitle = () => {
+    return role === 'college_admin' 
+      ? 'Institution Administration Portal' 
+      : 'Department Management Portal';
+  };
+  
+  const getWelcomeMessage = () => {
+    return role === 'college_admin'
+      ? 'Manage Your Institution Efficiently'
+      : 'Empower Your Department';
+  };
+
+  // Role-specific features with appropriate icons
+  const getFeatures = () => {
+    if (role === 'college_admin') {
+      return [
+        { 
+          text: 'Institution-wide dashboards and analytics', 
+          icon: <DashboardIcon /> 
+        },
+        // { 
+        //   text: 'Manage departments and admin access', 
+        //   icon: <AdminIcon /> 
+        // },
+        { 
+          text: 'Monitor student data across all departments', 
+          icon: <PeopleAltIcon /> 
+        },
+        { 
+          text: 'Track institutional performance metrics', 
+          icon: <AssessmentIcon /> 
+        },
+        // { 
+        //   text: 'Configure institution-wide settings', 
+        //   icon: <SettingsIcon /> 
+        // },
+      ];
+    } else {
+      return [
+        { 
+          text: 'Department-specific performance insights', 
+          icon: <DashboardIcon /> 
+        },
+        // { 
+        //   text: 'Approve student profile updates', 
+        //   icon: <CheckCircleIcon /> 
+        // },
+        // { 
+        //   text: 'Manage student assessments and curriculum', 
+        //   icon: <SchoolIcon /> 
+        // },
+        { 
+          text: 'Track student progress and metrics', 
+          icon: <AssessmentIcon /> 
+        },
+        { 
+          text: 'Manage department resources efficiently', 
+          icon: <ApartmentIcon /> 
+        },
+      ];
+    }
+  };
+
+  const features = getFeatures();
 
   return (
     <Box className={classes.loginImage}>
@@ -172,13 +234,13 @@ const LoginSidebar = ({ role = 'college_admin' }) => {
           Gigaversity Learning Platform
         </Typography>
         <Typography variant="body1" className={classes.appDescription}>
-          {role === 'college_admin' ? 'Institution Portal' : 'Department Portal'}
+          {getRoleTitle()}
         </Typography>
       </Box>
       
       {/* Welcome message */}
       <Typography className={classes.welcomeText}>
-        Welcome to Your Learning Journey
+        {getWelcomeMessage()}
       </Typography>
       
       {/* Feature List */}
