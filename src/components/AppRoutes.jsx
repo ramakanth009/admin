@@ -1,7 +1,7 @@
 // src/components/AppRoutes.jsx
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage from './login_page/Login';
+import Login from './login_page/Login';  // Corrected import name
 import ForgotPassword from './login_page/ForgotPassword';
 import Main from './admin/Main';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,7 +16,7 @@ const AppRoutes = () => {
     <Routes>
       <Route 
         path="/login" 
-        element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" replace />} 
+        element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" replace />} 
       />
       <Route 
         path="/forgot-password" 
