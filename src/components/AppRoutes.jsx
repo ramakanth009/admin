@@ -1,22 +1,26 @@
-// src/components/AppRoutes.jsx
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Login from './login_page/Login';  // Corrected import name
+import LoginPage from './login_page/Login';
 import ForgotPassword from './login_page/ForgotPassword';
-import Main from './admin/Main';
-import { useAuth } from '../contexts/AuthContext';
+import CollegeAdminMain from './college_admin/Main';
+import DepartmentAdminMain from './department_admin/Main';
+import { useAuth } from './AuthContext';
 
-/**
- * AppRoutes component that handles routing based on authentication state
- */
 const AppRoutes = () => {
-  const { isAuthenticated, userRole } = useAuth();
+  const { isAuthenticated, userRole, isCollegeAdmin, isDepartmentAdmin } = useAuth();
+
+  // Select the appropriate Main component based on the user role
+  const MainComponent = isCollegeAdmin() 
+    ? CollegeAdminMain 
+    : isDepartmentAdmin() 
+      ? DepartmentAdminMain 
+      : null;
 
   return (
     <Routes>
       <Route 
         path="/login" 
-        element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" replace />} 
+        element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" replace />} 
       />
       <Route 
         path="/forgot-password" 
@@ -26,7 +30,7 @@ const AppRoutes = () => {
         path="/*" 
         element={
           isAuthenticated ? (
-            <Main />
+            MainComponent ? <MainComponent /> : <Navigate to="/login" replace />
           ) : (
             <Navigate to="/login" replace />
           )

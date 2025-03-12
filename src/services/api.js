@@ -1,10 +1,10 @@
-// src/services/api.js
+// src/services/api.js - Updated with correct login endpoints
 import axios from 'axios';
 
 // Base API URL
 const API_BASE_URL = 'http://localhost:8000/api';
 
-// Create axios instance
+// Create an axios instance with authentication token handling
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -12,12 +12,12 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Add a request interceptor to include auth token
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
     if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -26,7 +26,7 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle token refresh
+// Add a response interceptor to handle token refresh
 apiClient.interceptors.response.use(
   (response) => {
     return response;
@@ -34,40 +34,37 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // If error is 401 (Unauthorized) and not already retrying
+    // If the error is due to an expired token and we haven't tried to refresh yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
       try {
-        // Attempt to refresh token
         const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
-        }
         
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh/`, {
-          refresh: refreshToken,
-        });
-        
-        // If refresh successful, update token and retry
-        if (response.data.access) {
+        if (refreshToken) {
+          // Request a new token using the refresh token
+          const response = await axios.post(`${API_BASE_URL}/auth/token/refresh/`, {
+            refresh: refreshToken,
+          });
+          
+          // Update the stored tokens
           localStorage.setItem('accessToken', response.data.access);
           
-          // Update axios headers
-          originalRequest.headers['Authorization'] = `Bearer ${response.data.access}`;
-          
-          return apiClient(originalRequest);
+          // Retry the original request with the new token
+          originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
+          return axios(originalRequest);
         }
       } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        
-        // Clear auth data and redirect to login
+        // If refresh token fails, logout the user
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('userRole');
+        localStorage.removeItem('userDetails');
+        localStorage.removeItem('isAuthenticated');
         
-        // Redirect to login page
+        // Redirect to login
         window.location.href = '/login';
+        return Promise.reject(refreshError);
       }
     }
     
@@ -75,24 +72,34 @@ apiClient.interceptors.response.use(
   }
 );
 
-// API endpoints
+// Role-based API endpoints
 const api = {
-  // Authentication endpoints
+  // Authentication - Updated with separate login endpoints
   auth: {
+    // College Admin login
     loginCollegeAdmin: (credentials) => 
       apiClient.post('/auth/college-admin/login/', credentials),
     
+    // Department Admin login
     loginDepartmentAdmin: (credentials) => 
       apiClient.post('/auth/department-admin/login/', credentials),
-    
-    refreshToken: (refreshToken) => 
-      apiClient.post('/auth/refresh/', { refresh: refreshToken }),
   },
   
-  // College admin endpoints
+  // College Admin endpoints
   collegeAdmin: {
     getDashboard: () => 
       apiClient.get('/college-admin/dashboard/'),
+      
+    getDepartmentAdmins: (page = 1, filters = {}) => {
+      let url = `/college-admin/department-admins/?page=${page}`;
+      
+      // Add filters if provided
+      if (filters.department) url += `&department=${filters.department}`;
+      if (filters.isActive !== undefined) url += `&is_active=${filters.isActive === 'active'}`;
+      if (filters.role) url += `&role=${filters.role}`;
+      
+      return apiClient.get(url);
+    },
     
     getStudents: (page = 1, filters = {}) => {
       let url = `/college-admin/students/?page=${page}`;
@@ -106,21 +113,10 @@ const api = {
     },
     
     getStudentDetails: (studentId) => 
-      apiClient.get(`/college-admin/${studentId}/student_details/`),
-    
-    getDepartmentAdmins: (page = 1, filters = {}) => {
-      let url = `/college-admin/department-admins/?page=${page}`;
-      
-      // Add filters if provided
-      if (filters.department) url += `&department=${filters.department}`;
-      if (filters.isActive !== undefined) url += `&is_active=${filters.isActive === 'active'}`;
-      if (filters.role) url += `&role=${filters.role}`;
-      
-      return apiClient.get(url);
-    },
+      apiClient.get(`/college-admin/student-details/${studentId}/`),
   },
   
-  // Department admin endpoints
+  // Department Admin endpoints
   departmentAdmin: {
     getDashboard: () => 
       apiClient.get('/department-admin/dashboard/'),
@@ -147,7 +143,7 @@ const api = {
       apiClient.post(`/department-admin/reject-profile-update/${studentId}/`),
   },
   
-  // Notifications (common for both admin types)
+  // Notifications - common to both admin types
   notifications: {
     getNotifications: () => 
       apiClient.get('/profiles/my_notifications/'),
@@ -157,7 +153,7 @@ const api = {
     
     markAllNotificationsRead: () => 
       apiClient.post('/profiles/mark_all_notifications_read/'),
-  },
+  }
 };
 
 export default api;
