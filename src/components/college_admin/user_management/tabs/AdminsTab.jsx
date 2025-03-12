@@ -14,7 +14,8 @@ import {
   CircularProgress,
   Alert,
   Tooltip,
-  Snackbar
+  Snackbar,
+  Button
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import {
@@ -84,6 +85,18 @@ const useStyles = makeStyles({
     fontFamily: 'monospace',
     fontWeight: '500',
     color: '#555',
+  },
+  titleContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px',
+  },
+  refreshButton: {
+    color: `${primaryColors.main} !important`,
+    '&:hover': {
+      backgroundColor: `${primaryColors.light}30 !important`,
+    },
   }
 });
 
@@ -157,21 +170,15 @@ const AdminsTab = () => {
 
   return (
     <>
-      <Typography variant="h5" className={classes.sectionTitle}>
-        Admin Management
-      </Typography>
-      
-      {/* Admin Statistics Cards */}
-      <AdminStats admins={admins} loading={loading} />
-      
-      {/* Refresh button */}
-      <Box className={classes.searchBox}>
-        <Tooltip title="Refresh">
-          <IconButton
-            className={classes.actionButton}
-            onClick={handleRefresh}
-            disabled={refreshing}
-          >
+      {/* Header with Title and Refresh Button */}
+      <Box className={classes.titleContainer}>
+        <Typography variant="h5" className={classes.sectionTitle}>
+          Admin Management
+        </Typography>
+        
+        <Button
+          variant="text"
+          startIcon={
             <RefreshIcon
               className={refreshing ? 'rotating' : ''}
               sx={{
@@ -182,10 +189,18 @@ const AdminsTab = () => {
                 },
               }}
             />
-          </IconButton>
-        </Tooltip>
+          }
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className={classes.refreshButton}
+        >
+          Refresh Data
+        </Button>
       </Box>
-
+      
+      {/* Admin Statistics Cards */}
+      <AdminStats admins={admins} loading={loading} />
+      
       {/* Admins table */}
       <TableContainer component={Paper} className={classes.tableContainer}>
         <Table>

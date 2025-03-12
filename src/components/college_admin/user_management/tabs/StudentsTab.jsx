@@ -125,7 +125,6 @@ const StudentsTab = () => {
   const [userDetails, setUserDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(new Date());
-  const [autoRefresh, setAutoRefresh] = useState(true);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -189,23 +188,6 @@ const StudentsTab = () => {
   useEffect(() => {
     fetchStudents();
   }, [fetchStudents]);
-
-  // Set up auto refresh
-  useEffect(() => {
-    let interval;
-    
-    if (autoRefresh) {
-      interval = setInterval(() => {
-        fetchStudents(true); // Silent refresh
-      }, AUTO_REFRESH_INTERVAL);
-    }
-    
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [autoRefresh, fetchStudents]);
 
   const fetchStudentDetails = async (studentId) => {
     try {
@@ -322,17 +304,21 @@ const StudentsTab = () => {
         
         <Button
           variant="text"
-          startIcon={<RefreshIcon className={refreshing ? 'rotating' : ''} />}
+          startIcon={
+            <RefreshIcon
+              className={refreshing ? 'rotating' : ''}
+              sx={{
+                animation: refreshing ? 'spin 1s linear infinite' : 'none',
+                '@keyframes spin': {
+                  '0%': { transform: 'rotate(0deg)' },
+                  '100%': { transform: 'rotate(360deg)' },
+                },
+              }}
+            />
+          }
           onClick={handleRefresh}
           disabled={refreshing}
           className={classes.refreshButton}
-          sx={{
-            animation: refreshing ? 'spin 1s linear infinite' : 'none',
-            '@keyframes spin': {
-              '0%': { transform: 'rotate(0deg)' },
-              '100%': { transform: 'rotate(360deg)' },
-            },
-          }}
         >
           Refresh Data
         </Button>
@@ -441,7 +427,7 @@ const StudentsTab = () => {
           <Box className={classes.paginationContainer}>
             <Box className={classes.refreshInfo}>
               <Typography variant="body2">
-                Last updated at {formatLastRefreshed()} • Auto-refresh {autoRefresh ? 'on' : 'off'}
+                Last updated at {formatLastRefreshed()}
               </Typography>
             </Box>
             
