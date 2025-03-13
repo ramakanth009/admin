@@ -1,3 +1,4 @@
+// src/components/AuthContext.jsx - UPDATED
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import LoadingSpinner from './common/LoadingSpinner';
 
@@ -12,30 +13,33 @@ export const AuthProvider = ({ children }) => {
   const [userDetails, setUserDetails] = useState(null);
 
   useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem('accessToken');
-    const role = localStorage.getItem('userRole');
-    const storedDetails = localStorage.getItem('userDetails');
-    
-    if (token) {
-      setIsAuthenticated(true);
-      setUserRole(role);
-      if (storedDetails) {
-        try {
-          setUserDetails(JSON.parse(storedDetails));
-        } catch (e) {
-          console.error("Error parsing user details:", e);
-          setUserDetails(null);
+    // This effect should only run once on mount
+    const checkAuth = () => {
+      const token = localStorage.getItem('accessToken');
+      const role = localStorage.getItem('userRole');
+      const storedDetails = localStorage.getItem('userDetails');
+      
+      if (token) {
+        setIsAuthenticated(true);
+        setUserRole(role);
+        if (storedDetails) {
+          try {
+            setUserDetails(JSON.parse(storedDetails));
+          } catch (e) {
+            console.error("Error parsing user details:", e);
+            setUserDetails(null);
+          }
         }
       }
-    }
-    
-    // Simulate a slightly longer load for smooth animation
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
-    
-    return () => clearTimeout(timer);
+      
+      // Simulate a slightly longer load for smooth animation
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 800);
+    };
+
+    checkAuth();
+    // Empty dependency array ensures this runs only once
   }, []);
 
   // Authentication methods

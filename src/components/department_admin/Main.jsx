@@ -42,10 +42,10 @@ const useStyles = makeStyles({
 const Main = () => {
   const classes = useStyles();
   const location = useLocation();
-  const { isAuthenticated, isDepartmentAdmin } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   // If not authenticated or not a department admin, redirect to login
-  if (!isAuthenticated || !isDepartmentAdmin()) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 

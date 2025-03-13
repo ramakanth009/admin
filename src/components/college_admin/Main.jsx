@@ -36,7 +36,7 @@ const useStyles = makeStyles({
 const Main = () => {
   const classes = useStyles();
   const location = useLocation();
-  const { isAuthenticated } = useAuth(); // Updated to use useAuth hook
+  const { isAuthenticated } = useAuth();
 
   // If not authenticated, redirect to login
   if (!isAuthenticated) {
