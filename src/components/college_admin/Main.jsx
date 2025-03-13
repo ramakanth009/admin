@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { makeStyles } from '@mui/styles';
@@ -6,8 +6,7 @@ import Sidebar from './Sidebar';
 import NavBar from './Navbar';
 import Dashboard from './dashboard/Dashboard';
 import UserManagement from './user_management/UserManagement';
-import { useAuth } from '../AuthContext'; // Updated import
-// import AuthContext from '../AuthContext';
+import { useAuth } from '../AuthContext';
 
 const useStyles = makeStyles({
   root: {
@@ -36,11 +35,15 @@ const useStyles = makeStyles({
 const Main = () => {
   const classes = useStyles();
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isCollegeAdmin } = useAuth();
 
-  // If not authenticated, redirect to login
+  // If not authenticated or not a college admin, redirect to login
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+  
+  if (!isCollegeAdmin) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (
@@ -50,11 +53,10 @@ const Main = () => {
         <Sidebar />
         <Box className={classes.mainContent}>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/" element={<Dashboard />} />
             <Route path="/student-management" element={<UserManagement />} />
             {/* Catch-all route */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Dashboard />} />
           </Routes>
         </Box>
       </Box>

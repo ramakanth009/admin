@@ -1,7 +1,6 @@
 // src/components/login_page/Login.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import {
   Box,
   Button,
@@ -192,10 +191,6 @@ const useStyles = makeStyles({
   },
 });
 
-// Updated login endpoints for different admin types
-const COLLEGE_ADMIN_LOGIN_ENDPOINT = "http://localhost:8000/api/auth/college-admin/login/";
-const DEPARTMENT_ADMIN_LOGIN_ENDPOINT = "http://localhost:8000/api/auth/department-admin/login/";
-
 const LoginPage = () => {
   const [loginType, setLoginType] = useState("college_admin");
   const colors = loginType === "college_admin" ? primaryColors : departmentColors;
@@ -271,8 +266,8 @@ const LoginPage = () => {
           })
       );
 
-      if (response.data.access) {
-        // Use the login function from AuthContext
+      if (response.data && response.data.access) {
+        // Call the login function from AuthContext
         login(response.data.access, response.data.refresh, loginType);
         
         if (formData.rememberMe) {
@@ -285,6 +280,9 @@ const LoginPage = () => {
         setTimeout(() => {
           navigate("/dashboard");
         }, 500);
+      } else {
+        setError("Invalid response format. Please try again.");
+        setLoading(false);
       }
     } catch (error) {
       console.error("Login error:", error);

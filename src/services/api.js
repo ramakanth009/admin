@@ -1,4 +1,4 @@
-// src/services/api.js - Updated with correct login endpoints
+// src/services/api.js
 import axios from 'axios';
 
 // Base API URL
@@ -10,15 +10,20 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
 });
 
 // Add a request interceptor to include auth token
 apiClient.interceptors.request.use(
   (config) => {
+    // Get the token from localStorage
     const token = localStorage.getItem('accessToken');
+    
+    // If token exists, add to headers
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
     return config;
   },
   (error) => {
@@ -34,7 +39,7 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // If the error is due to an expired token and we haven't tried to refresh yet
+    // Handle 401 Unauthorized errors (token expired)
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
@@ -48,22 +53,22 @@ apiClient.interceptors.response.use(
           });
           
           // Update the stored tokens
-          localStorage.setItem('accessToken', response.data.access);
-          
-          // Retry the original request with the new token
-          originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
-          return axios(originalRequest);
+          if (response.data.access) {
+            localStorage.setItem('accessToken', response.data.access);
+            
+            // Retry the original request with the new token
+            originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
+            return axios(originalRequest);
+          }
         }
-      } catch (refreshError) {
-        // If refresh token fails, logout the user
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userDetails');
-        localStorage.removeItem('isAuthenticated');
         
-        // Redirect to login
-        window.location.href = '/login';
+        // If we can't refresh, log out the user
+        logout();
+        
+        return Promise.reject(error);
+      } catch (refreshError) {
+        // If refresh token fails, log out the user
+        logout();
         return Promise.reject(refreshError);
       }
     }
@@ -72,9 +77,21 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Role-based API endpoints
+// Helper function to logout
+const logout = () => {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('userRole');
+  localStorage.removeItem('isAuthenticated');
+  localStorage.removeItem('userDetails');
+  
+  // Redirect to login
+  window.location.href = '/login';
+};
+
+// API endpoints with proper error handling
 const api = {
-  // Authentication - Updated with separate login endpoints
+  // Authentication
   auth: {
     // College Admin login
     loginCollegeAdmin: (credentials) => 
@@ -83,13 +100,19 @@ const api = {
     // Department Admin login
     loginDepartmentAdmin: (credentials) => 
       apiClient.post('/auth/department-admin/login/', credentials),
+      
+    // Refresh token
+    refreshToken: (refreshToken) =>
+      apiClient.post('/auth/token/refresh/', { refresh: refreshToken }),
   },
   
   // College Admin endpoints
   collegeAdmin: {
+    // Dashboard
     getDashboard: () => 
       apiClient.get('/college-admin/dashboard/'),
       
+    // Department admins listing
     getDepartmentAdmins: (page = 1, filters = {}) => {
       let url = `/college-admin/department-admins/?page=${page}`;
       
@@ -101,6 +124,7 @@ const api = {
       return apiClient.get(url);
     },
     
+    // Students listing
     getStudents: (page = 1, filters = {}) => {
       let url = `/college-admin/students/?page=${page}`;
       
@@ -112,15 +136,18 @@ const api = {
       return apiClient.get(url);
     },
     
+    // Student details
     getStudentDetails: (studentId) => 
       apiClient.get(`/college-admin/student-details/${studentId}/`),
   },
   
   // Department Admin endpoints
   departmentAdmin: {
+    // Dashboard
     getDashboard: () => 
       apiClient.get('/department-admin/dashboard/'),
     
+    // Students listing
     getStudents: (page = 1, filters = {}) => {
       let url = `/department-admin/students/?page=${page}`;
       
@@ -133,9 +160,11 @@ const api = {
       return apiClient.get(url);
     },
     
+    // Student details
     getStudentDetails: (studentId) => 
       apiClient.get(`/department-admin/student-details/${studentId}/`),
     
+    // Profile update permissions
     approveProfileUpdate: (studentId) => 
       apiClient.post(`/department-admin/approve-profile-update/${studentId}/`),
     

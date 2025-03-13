@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -132,21 +132,15 @@ const Sidebar = () => {
   const classes = useStyles();
   const navigate = useNavigate();
   const location = useLocation();
-  const { setIsAuthenticated } = useAuth();
+  const { logout } = useAuth();
 
   const handleTabClick = (path) => {
     navigate(path);
   };
 
   const handleLogout = () => {
-    // Clear all authentication data
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('isAuthenticated');
-    
-    // Update authentication context
-    setIsAuthenticated(false);
+    // Use the logout function from AuthContext
+    logout();
     
     // Navigate to login
     navigate('/login', { replace: true });
@@ -164,9 +158,6 @@ const Sidebar = () => {
         <Typography className={classes.brandSubtitle}>
           Learning Management System
         </Typography>
-        {/* <Typography className={classes.welcomeText}> */}
-          {/* Welcome to your dashboard */}
-        {/* </Typography> */}
       </Box>
       
       <Box className={classes.sidebarContent}>
@@ -179,15 +170,15 @@ const Sidebar = () => {
               {section.items.map((item) => (
                 <ListItem
                   key={item.id}
-                  button
+                  button // Correct boolean attribute
                   className={`${classes.sidebarItem} ${
-                    location.pathname === item.path ? classes.activeTab : ''
+                    location.pathname.startsWith(item.path) ? classes.activeTab : ''
                   }`}
                   onClick={() => handleTabClick(item.path)}
                 >
                   <ListItemIcon 
                     sx={{ 
-                      color: location.pathname === item.path ? primaryColors.main : 'inherit'
+                      color: location.pathname.startsWith(item.path) ? primaryColors.main : 'inherit'
                     }}
                   >
                     {item.icon}
@@ -196,8 +187,8 @@ const Sidebar = () => {
                     primary={item.label} 
                     primaryTypographyProps={{
                       sx: { 
-                        fontWeight: location.pathname === item.path ? 'bold' : 'normal',
-                        color: location.pathname === item.path ? primaryColors.main : 'inherit'
+                        fontWeight: location.pathname.startsWith(item.path) ? 'bold' : 'normal',
+                        color: location.pathname.startsWith(item.path) ? primaryColors.main : 'inherit'
                       }
                     }}
                   />
@@ -212,7 +203,7 @@ const Sidebar = () => {
       {/* Logout Section */}
       <Box className={classes.logoutSection}>
         <ListItem 
-          button 
+          button // Correct boolean attribute
           className={classes.logoutButton}
           onClick={handleLogout}
         >

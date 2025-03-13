@@ -42,11 +42,15 @@ const useStyles = makeStyles({
 const Main = () => {
   const classes = useStyles();
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isDepartmentAdmin } = useAuth();
 
   // If not authenticated or not a department admin, redirect to login
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+  
+  if (!isDepartmentAdmin) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (
@@ -56,11 +60,10 @@ const Main = () => {
         <Sidebar />
         <Box className={classes.mainContent}>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/" element={<Dashboard />} />
             <Route path="/student-management" element={<UserManagement />} />
             {/* Catch-all route */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Dashboard />} />
           </Routes>
         </Box>
       </Box>
