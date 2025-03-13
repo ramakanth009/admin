@@ -32,16 +32,16 @@ const AppRoutes = () => {
       
       {/* Protected routes - note the /* to allow for nested routes */}
       <Route path="/dashboard/*" element={
-        isAuthenticated ? 
-          (MainComponent ? <MainComponent /> : <Navigate to="/login" />) : 
-          <Navigate to="/login" />
-      } />
-      
-      <Route path="/student-management/*" element={
-        isAuthenticated ? 
-          (MainComponent ? <MainComponent /> : <Navigate to="/login" />) : 
-          <Navigate to="/login" />
-      } />
+  isAuthenticated ? 
+    (MainComponent ? <MainComponent /> : <Navigate to="/login" />) : 
+    <Navigate to="/login" />
+} />
+
+<Route path="/student-management/*" element={
+  isAuthenticated ? 
+    (MainComponent ? <MainComponent /> : <Navigate to="/login" />) : 
+    <Navigate to="/login" />
+} />
       
       {/* Catch-all route for the root path */}
       <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
