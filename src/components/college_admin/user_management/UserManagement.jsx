@@ -63,7 +63,7 @@ const TabPanel = (props) => {
   );
 };
 
-const StudentManagement = () => {
+const UserManagment = () => {
   const classes = useStyles();
   const [categoryTab, setCategoryTab] = useState(0); // 0 for Students, 1 for Admins
 
@@ -108,4 +108,4 @@ const StudentManagement = () => {
   );
 };
 
-export default StudentManagement;
+export default UserManagment;
