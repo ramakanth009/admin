@@ -46,7 +46,7 @@ const WelcomeCard = ({ departmentName, institutionName }) => {
   const navigate = useNavigate();
 
   const handleManageStudentsClick = () => {
-    navigate('/student-management');
+    navigate('/user-management');
   };
 
   return (

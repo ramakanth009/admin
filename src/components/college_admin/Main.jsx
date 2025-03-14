@@ -55,7 +55,7 @@ const Main = () => {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             {/* Change this line below */}
-            <Route path="/student-management" element={<UserManagement />} />
+            <Route path="/user-management" element={<UserManagement />} />
             {/* To this: */}
             <Route path="/*" element={<Navigate to="/" replace />} />
           </Routes>

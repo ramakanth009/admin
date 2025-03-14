@@ -62,7 +62,7 @@ const Main = () => {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             {/* The issue is here - we need to match the correct paths */}
-            <Route path="/student-management/*" element={<UserManagement />} />
+            <Route path="/user-management/*" element={<UserManagement />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Box>

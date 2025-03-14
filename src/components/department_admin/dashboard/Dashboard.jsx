@@ -18,7 +18,7 @@ import apiService from '../../../services/apiService';
 
 // Import modular components
 import WelcomeCard from "./WelcomeCard";
-import DepartmentDetails from "./DepartmentDetails";
+// import DepartmentDetails from "./DepartmentDetails";
 import StudentSummary from "./StudentSummary";
 import StudentPerformance from "./data_box/StudentPerformance";
 import StudentOverview from "./data_box/StudentOverview";
@@ -214,7 +214,7 @@ const Dashboard = () => {
           <Box className={classes.departmentInfo}>
             <SchoolIcon sx={{ color: departmentColors.main }} />
             <Typography variant="h6" className={classes.departmentName}>
-              {dashboardData?.department || "Computer Science Department"}
+              {dashboardData?.department}
             </Typography>
           </Box>
         </Box>
@@ -247,7 +247,7 @@ const Dashboard = () => {
       />
 
       {/* Department Info Card */}
-      <DepartmentDetails departmentDetails={dashboardData?.stats?.department_summary} />
+      {/* <DepartmentDetails departmentDetails={dashboardData?.stats?.department_summary} /> */}
 
       {/* Student Summary */}
       <StudentSummary 
